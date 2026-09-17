@@ -16,6 +16,7 @@
 
 import pygame
 from deck import Deck
+import sys
 
 class Game:
     def __init__(self):
@@ -55,19 +56,33 @@ class Game:
 
     def run(self):
         while self.running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
 
             self.display.fill((0, 0, 0, 0))  # Clear the screen with black
             self.display.blit(self.background, (0, 0))
 
             self.display.blit(self.card_front, area=self.getCardFront(self.deck.get_suit(self.current_card), self.deck.get_rank(self.current_card)))  # Draw the card front
+            width = self.display.get_width()
+            height = self.display.get_height()
+            #Higher button
+            pygame.draw.rect(self.display, (100,100,100), [width / 2 - 60, height / 2 + 50, 50, 50])
+            font = pygame.font.SysFont('Corbel', 15)
+            self.display.blit(font.render('Higher', True, (255, 255, 255)), (width / 2 - 60, height / 2 + 65))
+            #Lower button
+            
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    pygame.quit()
+                    sys.exit()
+                
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pass
+            
+            
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))  # Scale the display to the screen size
             pygame.display.update()  # Update the display
-            self.clock.tick(60)  # Limit to 60 frames per second
-
-        pygame.quit()
+            self.clock.tick(30)  # Limit to 60 frames per second
 
 
 Game().run()
