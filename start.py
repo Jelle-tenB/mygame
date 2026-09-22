@@ -1,17 +1,7 @@
 
-#TODO: Make 52 cards, 4 suits, 13 ranks deck
-    #TODO: Keep track of which cards have been drawn
-    #TODO: Draw random card from deck
-    #TODO: Choose a spot to display card
-    #TODO: Display new card next to previous card
-        #TODO: When new bet is placed, switch card placement
-        #TODO: Keep track of all drawn cards??
-
-#TODO: Bet higher or lower
-    #TODO: Handle user input for betting, with arrow keys and/or mouse clicks
+# TODO: Change first card position to the left
 
 #TODO: Track score
-    #TODO: Display score on screen
     #TODO: Streak bonus system??
 
 import pygame
@@ -23,13 +13,15 @@ class Game:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("My Game")
-        self.screen = pygame.display.set_mode((640, 480))
-        self.display = pygame.Surface((320, 240))
+        self.screen = pygame.display.set_mode((1280, 960))
+        self.display = pygame.Surface((640, 480))
         self.clock = pygame.time.Clock()
         self.running = True
 
         self.score = 0
-        self.new_card = False
+        self.old_card = False
+        
+        
         
         try:
             with open("highscore.json", "r") as file:
@@ -41,10 +33,11 @@ class Game:
         
         self.deck = Deck()
         self.deck.shuffle()
-        self.old_card = self.deck.draw()
+        self.new_card = self.deck.draw()
         
-        self.card_front = self.load_image("card_fronts.png")
+        self.card_front = self.load_image("deck_classic_light_4color_1.png")
         self.background = self.load_image("background.png")
+        self.background = pygame.transform.smoothscale(self.background, (640, 480))
 
 
     def load_image(self, imgName: str) -> pygame.Surface:
@@ -60,9 +53,23 @@ class Game:
         """
         
         # Starting position for the card front (3, 3, 71, 97)
-        left = 3 + rank * 71
-        top = 3 + suit * 97
-        return (left, top, 71, 97)  # Return the rectangle area for the card front
+        left = 12 + rank * 64
+        top = 2 + suit * 64
+
+        return (left, top, 40, 60)
+    
+    
+    def getHalfCardFront(self, suit: int, rank: int) -> tuple:
+            """
+            Suits: 0 = Diamonds, 1 = Clubs, 2 = Hearts, 3 = Spades,
+            Ranks: 0 = Ace, 1 = 2, ..., 11 = Queen, 12 = King
+            """
+            
+            # Starting position for the card front (3, 3, 71, 97)
+            left = 12 + rank * 64
+            top = 2 + suit * 64
+    
+            return (left, top, 40, 18)
     
     
     def compare(self, bet):
@@ -77,26 +84,36 @@ class Game:
 
             self.display.fill((0, 0, 0, 0))  # Clear the screen with black
             self.display.blit(self.background, (0, 0))
-
-            # Display old card left
-            self.display.blit(self.card_front, dest=(0,0), area=self.getCardFront(self.deck.get_suit(self.old_card), self.deck.get_rank(self.old_card)))
-            # Display new card right
-            if self.new_card:
-                self.display.blit(self.card_front, dest=(320 - 68, 0), area=self.getCardFront(self.deck.get_suit(self.new_card), self.deck.get_rank(self.new_card)))
-            
             width = self.display.get_width()
             height = self.display.get_height()
+
+            # Display old card left
+            # card_area = self.getCardFront(
+            #     self.deck.get_suit(self.old_card),
+            #     self.deck.get_rank(self.old_card)
+            # )
+
+            # card = self.card_front.subsurface(card_area).copy()
+            # card = pygame.transform.smoothscale(card, (30, 45))
+
+            # self.display.blit(card, (0, 0))
+            
+            if self.old_card:
+                self.display.blit(self.card_front, dest=(width / 2 - 20, height / 4 - 15), area=self.getHalfCardFront(self.deck.get_suit(self.old_card), self.deck.get_rank(self.old_card)))
+            self.display.blit(self.card_front, dest=(width / 2 - 20, height / 4), area=self.getCardFront(self.deck.get_suit(self.new_card), self.deck.get_rank(self.new_card)))
+            # Display new card right
+            
             
             #Higher button
             higher_button = pygame.Rect(width / 2 - 50, height / 2 + 50, 50, 50)
             pygame.draw.rect(self.display, (100, 255, 100), higher_button)
-            font = pygame.font.SysFont('Corbel', 15)
+            font = pygame.font.SysFont('Helvetica', 15)
             self.display.blit(font.render('Higher', True, (1, 1, 1)), (width / 2 - 47, height / 2 + 65))
             
             #Lower button
             lower_button = pygame.Rect(width / 2 + 5, height / 2 + 50, 50, 50)
             pygame.draw.rect(self.display, (255, 100, 100), lower_button)
-            self.display.blit(font.render('Lower', True, (1, 1, 1)), (width / 2 + 11, height / 2 + 65))
+            self.display.blit(font.render('Lower', True, (1, 1, 1)), (width / 2 + 10, height / 2 + 65))
             
             #Score display
             self.display.blit(font.render(f'Score: {self.score}', True, (1, 1, 1)), (width / 2 - 25, 20))
@@ -120,6 +137,20 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_x = event.pos[0] * width / self.screen.get_width()
                     mouse_y = event.pos[1] * height / self.screen.get_height()
+                    
+                    # Restart Button
+                    # Needs to be first to properly check you are out of cards.
+                    if self.out_of_cards:
+                        if restart_button.collidepoint(mouse_x, mouse_y):
+                            self.out_of_cards = False
+                            self.score = 0
+                            self.old_card = False
+                            self.deck = Deck()
+                            self.deck.shuffle()
+                            self.old_card = self.deck.draw()
+                            self.highscore = max(self.highscore, self.score)
+                    
+                    # Higher button
                     if higher_button.collidepoint(mouse_x, mouse_y) and not self.out_of_cards:
                         if self.new_card:
                             self.old_card = self.new_card
@@ -132,6 +163,7 @@ class Game:
                                     file.write(json.dumps({"highscore": self.score}))
                             self.out_of_cards = True
 
+                    # Lower button
                     if lower_button.collidepoint(mouse_x, mouse_y) and not self.out_of_cards:
                         if self.new_card:
                             self.old_card = self.new_card
@@ -143,18 +175,6 @@ class Game:
                                 with open("highscore.json", "w") as file:
                                     file.write(json.dumps({"highscore": self.score}))
                             self.out_of_cards = True
-                    
-                    try:
-                        if restart_button.collidepoint(mouse_x, mouse_y):
-                            self.out_of_cards = False
-                            self.score = 0
-                            self.new_card = False
-                            self.deck = Deck()
-                            self.deck.shuffle()
-                            self.old_card = self.deck.draw()
-                            self.highscore = max(self.highscore, self.score)
-                    except UnboundLocalError:
-                        pass
             
             
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))  # Scale the display to the screen size

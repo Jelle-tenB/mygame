@@ -4,6 +4,7 @@
         "collidepoint",
         "colorkey",
         "highscore",
-        "MOUSEBUTTONDOWN"
+        "MOUSEBUTTONDOWN",
+        "smoothscale"
     ]
 }
