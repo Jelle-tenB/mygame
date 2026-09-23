@@ -5,6 +5,7 @@ class Deck:
     def __init__(self):
         self.cards = list(range(52))
         self.position = 0
+        self.played_cards = []
 
     def shuffle(self):
         random.shuffle(self.cards)
@@ -15,6 +16,8 @@ class Deck:
             raise IndexError("No cards left in deck")
 
         card = self.cards[self.position]
+        self.played_cards.append(card)
+        self.played_cards.sort()
         self.position += 1
         return card
 

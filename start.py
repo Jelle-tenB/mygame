@@ -86,23 +86,12 @@ class Game:
             self.display.blit(self.background, (0, 0))
             width = self.display.get_width()
             height = self.display.get_height()
-
-            # Display old card left
-            # card_area = self.getCardFront(
-            #     self.deck.get_suit(self.old_card),
-            #     self.deck.get_rank(self.old_card)
-            # )
-
-            # card = self.card_front.subsurface(card_area).copy()
-            # card = pygame.transform.smoothscale(card, (30, 45))
-
-            # self.display.blit(card, (0, 0))
             
+            # Old card underneath the new card
             if self.old_card:
                 self.display.blit(self.card_front, dest=(width / 2 - 20, height / 4 - 15), area=self.getHalfCardFront(self.deck.get_suit(self.old_card), self.deck.get_rank(self.old_card)))
+            # New card second, so its on top of old card
             self.display.blit(self.card_front, dest=(width / 2 - 20, height / 4), area=self.getCardFront(self.deck.get_suit(self.new_card), self.deck.get_rank(self.new_card)))
-            # Display new card right
-            
             
             #Higher button
             higher_button = pygame.Rect(width / 2 - 50, height / 2 + 50, 50, 50)
@@ -120,6 +109,18 @@ class Game:
             
             #Highscore display
             self.display.blit(font.render(f'Highscore: {self.highscore}', True, (1, 1, 1)), (width / 2 - 53, 40))
+            
+            # Display played cards from top left to bottom left
+            if self.deck.played_cards:
+                for i, value in enumerate(self.deck.played_cards[:-1]):
+                    if i > 29:
+                        self.display.blit(self.card_front, dest=(40, (i * 15) - 30 * 15), area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
+                    else:
+                        self.display.blit(self.card_front, dest=(0, i * 15), area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
+                if len(self.deck.played_cards) > 30:
+                    self.display.blit(self.card_front, dest=(40, (len(self.deck.played_cards) - 15 * 30) * 15 - 15), area=self.getCardFront(self.deck.get_suit(self.deck.played_cards[-1]), self.deck.get_rank(self.deck.played_cards[-1])))
+                else:
+                    self.display.blit(self.card_front, dest=(0, len(self.deck.played_cards) * 15 - 15), area=self.getCardFront(self.deck.get_suit(self.deck.played_cards[-1]), self.deck.get_rank(self.deck.played_cards[-1])))
             
             #Restart button
             if self.out_of_cards:
@@ -156,6 +157,7 @@ class Game:
                             self.old_card = self.new_card
                         try:
                             self.new_card = self.deck.draw()
+                            print(self.new_card)
                             self.compare("higher")
                         except IndexError:
                             if self.highscore < self.score:
