@@ -11,20 +11,19 @@ class Deck:
         random.shuffle(self.cards)
         self.position = 0
 
-    def draw(self):
+    def draw(self) -> int:
         if self.position >= len(self.cards):
             raise IndexError("No cards left in deck")
 
         card = self.cards[self.position]
         self.played_cards.append(card)
-        self.played_cards.sort()
         self.position += 1
         return card
 
     @staticmethod
-    def get_suit(card):
+    def get_suit(card: int) -> int:
         return card // 13
 
     @staticmethod
-    def get_rank(card):
+    def get_rank(card: int) -> int:
         return card % 13

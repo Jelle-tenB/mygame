@@ -1,13 +1,10 @@
-
-# TODO: Change first card position to the left
-
-#TODO: Track score
-    #TODO: Streak bonus system??
+import json
+import sys
 
 import pygame
+
 from deck import Deck
-import sys
-import json
+
 
 class Game:
     def __init__(self):
@@ -18,18 +15,19 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
 
+        self.font = pygame.font.SysFont('Helvetica', 15)
+        self.small_font = pygame.font.SysFont('Helvetica', 10)
+
         self.score = 0
         self.old_card = False
         
-        
+        self.streak = 0
         
         try:
             with open("highscore.json", "r") as file:
                 self.highscore = json.load(file)["highscore"]
         except FileNotFoundError:
             self.highscore = 0
-        self.save = False
-        self.out_of_cards = False
         
         self.deck = Deck()
         self.deck.shuffle()
@@ -51,8 +49,6 @@ class Game:
         Suits: 0 = Diamonds, 1 = Clubs, 2 = Hearts, 3 = Spades,
         Ranks: 0 = Ace, 1 = 2, ..., 11 = Queen, 12 = King
         """
-        
-        # Starting position for the card front (3, 3, 71, 97)
         left = 12 + rank * 64
         top = 2 + suit * 64
 
@@ -60,23 +56,40 @@ class Game:
     
     
     def getHalfCardFront(self, suit: int, rank: int) -> tuple:
-            """
-            Suits: 0 = Diamonds, 1 = Clubs, 2 = Hearts, 3 = Spades,
-            Ranks: 0 = Ace, 1 = 2, ..., 11 = Queen, 12 = King
-            """
-            
-            # Starting position for the card front (3, 3, 71, 97)
-            left = 12 + rank * 64
-            top = 2 + suit * 64
-    
-            return (left, top, 40, 18)
+        """
+        Suits: 0 = Diamonds, 1 = Clubs, 2 = Hearts, 3 = Spades,
+        Ranks: 0 = Ace, 1 = 2, ..., 11 = Queen, 12 = King
+        """
+        left = 12 + rank * 64
+        top = 2 + suit * 64
+
+        return (left, top, 40, 18)
     
     
-    def compare(self, bet):
-        if bet == "higher" and self.deck.get_rank(self.new_card) > self.deck.get_rank(self.old_card):
-            self.score += 1
-        elif bet == "lower" and self.deck.get_rank(self.new_card) < self.deck.get_rank(self.old_card):
-            self.score += 1
+    def compare(self, bet: str):
+        if ((bet == "higher" and self.deck.get_rank(self.new_card) > self.deck.get_rank(self.old_card)) or
+        (bet == "lower" and self.deck.get_rank(self.new_card) < self.deck.get_rank(self.old_card))):
+            if self.streak >= 10:
+                self.score += 5
+            elif self.streak >= 5:
+                self.score += 3
+            elif self.streak >= 2:
+                self.score += 2
+            else:
+                self.score += 1
+            self.streak += 1
+        elif bet == "same" and self.deck.get_rank(self.new_card) == self.deck.get_rank(self.old_card):
+            if self.streak >= 10:
+                self.score += 50
+            elif self.streak >= 5:
+                self.score += 30
+            elif self.streak >= 2:
+                self.score += 20
+            else:
+                self.score += 10
+            self.streak += 1
+        else:
+            self.streak = 0
 
 
     def run(self):
@@ -87,46 +100,63 @@ class Game:
             width = self.display.get_width()
             height = self.display.get_height()
             
+            #Display rules
+            self.display.blit(self.small_font.render('Choose wether the next card is higher, lower or same rank', True, (1,1,1)), (width / 4 + 50, height - 45))
+            self.display.blit(self.small_font.render('Ace is the lowest card, King the highest', True, (1,1,1)), (width / 4 + 50, height - 35))
+            self.display.blit(self.small_font.render('Streak of 2 = 2 points, streak 5 = 3, streak 10 = 5', True, (1,1,1)), (width / 4 + 50, height - 25))
+            self.display.blit(self.small_font.render('Correct "same" bet gives 10 points times streak multiplier', True, (1,1,1)), (width / 4 + 50, height - 15))
+            
             # Old card underneath the new card
-            if self.old_card:
-                self.display.blit(self.card_front, dest=(width / 2 - 20, height / 4 - 15), area=self.getHalfCardFront(self.deck.get_suit(self.old_card), self.deck.get_rank(self.old_card)))
+            if self.old_card is not False:
+                self.display.blit(self.card_front, dest=(width / 2 - 20, height / 4), area=self.getHalfCardFront(self.deck.get_suit(self.old_card), self.deck.get_rank(self.old_card)))
             # New card second, so its on top of old card
-            self.display.blit(self.card_front, dest=(width / 2 - 20, height / 4), area=self.getCardFront(self.deck.get_suit(self.new_card), self.deck.get_rank(self.new_card)))
+            self.display.blit(self.card_front, dest=(width / 2 - 20, height / 4 + 15), area=self.getCardFront(self.deck.get_suit(self.new_card), self.deck.get_rank(self.new_card)))
             
             #Higher button
-            higher_button = pygame.Rect(width / 2 - 50, height / 2 + 50, 50, 50)
+            higher_button = pygame.Rect(width / 2 - 80, height / 2 + 50, 50, 50)
             pygame.draw.rect(self.display, (100, 255, 100), higher_button)
-            font = pygame.font.SysFont('Helvetica', 15)
-            self.display.blit(font.render('Higher', True, (1, 1, 1)), (width / 2 - 47, height / 2 + 65))
+            self.display.blit(self.font.render('Higher', True, (1, 1, 1)), (width / 2 - 77, height / 2 + 65))
             
             #Lower button
-            lower_button = pygame.Rect(width / 2 + 5, height / 2 + 50, 50, 50)
+            lower_button = pygame.Rect(width / 2 - 25, height / 2 + 50, 50, 50)
             pygame.draw.rect(self.display, (255, 100, 100), lower_button)
-            self.display.blit(font.render('Lower', True, (1, 1, 1)), (width / 2 + 10, height / 2 + 65))
+            self.display.blit(self.font.render('Lower', True, (1, 1, 1)), (width / 2 - 20, height / 2 + 65))
             
-            #Score display
-            self.display.blit(font.render(f'Score: {self.score}', True, (1, 1, 1)), (width / 2 - 25, 20))
+            #Same button
+            same_button = pygame.Rect(width / 2 + 30, height / 2+ 50, 50, 50)
+            pygame.draw.rect(self.display, (128, 50, 128), same_button)
+            self.display.blit(self.font.render('Same', True, (1, 1, 1)), (width / 2 + 35, height / 2 + 65))
             
             #Highscore display
-            self.display.blit(font.render(f'Highscore: {self.highscore}', True, (1, 1, 1)), (width / 2 - 53, 40))
+            self.display.blit(self.font.render(f'Highscore: {"69 nice" if self.highscore == 69 else self.highscore}', True, (1, 1, 1)), (width / 2 - 63, 20))
+            
+            #Cards left display
+            self.display.blit(self.font.render(f'Cards left: {52 - len(self.deck.played_cards)}', True, (1, 1, 1)), (width / 2 - 59, 40))
+            
+            #Score display
+            self.display.blit(self.font.render(f'Score: {"69 nice" if self.score == 69 else self.score}', True, (1, 1, 1)), (width / 2 - 35, 60))
+            
+            #Streak display
+            self.display.blit(self.font.render(f'Streak: {self.streak}', True, (1, 1, 1)), (width / 2 - 38, 80))
             
             # Display played cards from top left to bottom left
             if self.deck.played_cards:
-                for i, value in enumerate(self.deck.played_cards[:-1]):
-                    if i > 29:
-                        self.display.blit(self.card_front, dest=(40, (i * 15) - 30 * 15), area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
-                    else:
+                sorted_played_cards = sorted(self.deck.played_cards)
+                for i, value in enumerate(sorted_played_cards[:-1]):
+                    if i < 32:
                         self.display.blit(self.card_front, dest=(0, i * 15), area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
-                if len(self.deck.played_cards) > 30:
-                    self.display.blit(self.card_front, dest=(40, (len(self.deck.played_cards) - 15 * 30) * 15 - 15), area=self.getCardFront(self.deck.get_suit(self.deck.played_cards[-1]), self.deck.get_rank(self.deck.played_cards[-1])))
+                    else:
+                        self.display.blit(self.card_front, dest=(40, (i * 15) - 32 * 15), area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
+                if len(self.deck.played_cards) > 32:
+                    self.display.blit(self.card_front, dest=(40, len(self.deck.played_cards) * 15 - 32 * 15 - 15), area=self.getCardFront(self.deck.get_suit(sorted_played_cards[-1]), self.deck.get_rank(sorted_played_cards[-1])))
                 else:
-                    self.display.blit(self.card_front, dest=(0, len(self.deck.played_cards) * 15 - 15), area=self.getCardFront(self.deck.get_suit(self.deck.played_cards[-1]), self.deck.get_rank(self.deck.played_cards[-1])))
+                    self.display.blit(self.card_front, dest=(0, len(self.deck.played_cards) * 15 - 15), area=self.getCardFront(self.deck.get_suit(sorted_played_cards[-1]), self.deck.get_rank(sorted_played_cards[-1])))
             
             #Restart button
-            if self.out_of_cards:
-                restart_button = pygame.Rect(width / 2 - 25, 60, 50, 50)
+            if 52 - len(self.deck.played_cards) == 0:
+                restart_button = pygame.Rect(width / 2 - 25, height / 2 - 25, 50, 50)
                 pygame.draw.rect(self.display, (100, 100, 255), restart_button)
-                self.display.blit(font.render('Restart', True, (1, 1, 1)), (width / 2 - 21, 75))
+                self.display.blit(self.font.render('Restart', True, (1, 1, 1)), (width / 2 - 24, height / 2 - 10))
             
 
             for event in pygame.event.get():
@@ -141,42 +171,45 @@ class Game:
                     
                     # Restart Button
                     # Needs to be first to properly check you are out of cards.
-                    if self.out_of_cards:
+                    if 52 - len(self.deck.played_cards) == 0:
                         if restart_button.collidepoint(mouse_x, mouse_y):
-                            self.out_of_cards = False
-                            self.score = 0
                             self.old_card = False
+                            self.streak = 0
                             self.deck = Deck()
                             self.deck.shuffle()
-                            self.old_card = self.deck.draw()
+                            self.new_card = self.deck.draw()
                             self.highscore = max(self.highscore, self.score)
+                            self.score = 0
                     
                     # Higher button
-                    if higher_button.collidepoint(mouse_x, mouse_y) and not self.out_of_cards:
-                        if self.new_card:
+                    if higher_button.collidepoint(mouse_x, mouse_y) and 52 - len(self.deck.played_cards) > 0:
+                        if self.new_card is not None:
                             self.old_card = self.new_card
-                        try:
-                            self.new_card = self.deck.draw()
-                            print(self.new_card)
-                            self.compare("higher")
-                        except IndexError:
-                            if self.highscore < self.score:
+                        self.new_card = self.deck.draw()
+                        self.compare("higher")
+                        if 52 - len(self.deck.played_cards) == 0 and self.highscore < self.score:
                                 with open("highscore.json", "w") as file:
                                     file.write(json.dumps({"highscore": self.score}))
-                            self.out_of_cards = True
 
                     # Lower button
-                    if lower_button.collidepoint(mouse_x, mouse_y) and not self.out_of_cards:
-                        if self.new_card:
+                    if lower_button.collidepoint(mouse_x, mouse_y) and 52 - len(self.deck.played_cards) > 0:
+                        if self.new_card is not None:
                             self.old_card = self.new_card
-                        try:
-                            self.new_card = self.deck.draw()
-                            self.compare("lower")
-                        except IndexError:
-                            if self.highscore < self.score:
+                        self.new_card = self.deck.draw()
+                        self.compare("lower")
+                        if 52 - len(self.deck.played_cards) == 0 and self.highscore < self.score:
                                 with open("highscore.json", "w") as file:
                                     file.write(json.dumps({"highscore": self.score}))
-                            self.out_of_cards = True
+                    
+                    # Same button
+                    if same_button.collidepoint(mouse_x, mouse_y) and 52 - len(self.deck.played_cards) > 0:
+                        if self.new_card is not None:
+                            self.old_card = self.new_card
+                        self.new_card = self.deck.draw()
+                        self.compare("same")
+                        if 52 - len(self.deck.played_cards) == 0 and self.highscore < self.score:
+                                with open("highscore.json", "w") as file:
+                                    file.write(json.dumps({"highscore": self.score}))
             
             
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))  # Scale the display to the screen size
