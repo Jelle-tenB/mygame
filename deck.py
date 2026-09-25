@@ -3,7 +3,8 @@ import random
 
 class Deck:
     def __init__(self):
-        self.cards = list(range(52))
+        self.deck_size = 52
+        self.cards = list(range(self.deck_size))
         self.position = 0
         self.played_cards = []
 

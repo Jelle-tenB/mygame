@@ -5,6 +5,10 @@ import pygame
 
 from deck import Deck
 
+MUSIC_INTRO = "Jankis_Lair_intro.ogg"
+MUSIC_LOOP = "Jankis_Lair_loop.ogg"
+MUSIC_LOOP_EVENT = pygame.USEREVENT + 1
+
 
 class Game:
     def __init__(self):
@@ -20,7 +24,6 @@ class Game:
 
         self.score = 0
         self.old_card = False
-        
         self.streak = 0
         
         try:
@@ -32,10 +35,21 @@ class Game:
         self.deck = Deck()
         self.deck.shuffle()
         self.new_card = self.deck.draw()
+        self.deck_size = self.deck.deck_size
         
         self.card_front = self.load_image("deck_classic_light_4color_1.png")
         self.background = self.load_image("background.png")
         self.background = pygame.transform.smoothscale(self.background, (640, 480))
+        
+        self.audio_card_place = pygame.mixer.Sound('short-card-place-1.ogg')
+        self.audio_card_place.set_volume(0.3)
+        self.audio_shuffle = pygame.mixer.Sound('short-card-fan-1.ogg')
+        self.audio_shuffle.set_volume(0.4)
+
+        pygame.mixer.music.set_endevent(MUSIC_LOOP_EVENT)
+        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.load(MUSIC_INTRO)
+        pygame.mixer.music.play()
 
 
     def load_image(self, imgName: str) -> pygame.Surface:
@@ -131,7 +145,7 @@ class Game:
             self.display.blit(self.font.render(f'Highscore: {"69 nice" if self.highscore == 69 else self.highscore}', True, (1, 1, 1)), (width / 2 - 63, 20))
             
             #Cards left display
-            self.display.blit(self.font.render(f'Cards left: {52 - len(self.deck.played_cards)}', True, (1, 1, 1)), (width / 2 - 59, 40))
+            self.display.blit(self.font.render(f'Cards left: {self.deck_size - len(self.deck.played_cards)}', True, (1, 1, 1)), (width / 2 - 59, 40))
             
             #Score display
             self.display.blit(self.font.render(f'Score: {"69 nice" if self.score == 69 else self.score}', True, (1, 1, 1)), (width / 2 - 35, 60))
@@ -153,7 +167,7 @@ class Game:
                     self.display.blit(self.card_front, dest=(0, len(self.deck.played_cards) * 15 - 15), area=self.getCardFront(self.deck.get_suit(sorted_played_cards[-1]), self.deck.get_rank(sorted_played_cards[-1])))
             
             #Restart button
-            if 52 - len(self.deck.played_cards) == 0:
+            if self.deck_size - len(self.deck.played_cards) == 0:
                 restart_button = pygame.Rect(width / 2 - 25, height / 2 - 25, 50, 50)
                 pygame.draw.rect(self.display, (100, 100, 255), restart_button)
                 self.display.blit(self.font.render('Restart', True, (1, 1, 1)), (width / 2 - 24, height / 2 - 10))
@@ -164,6 +178,10 @@ class Game:
                     self.running = False
                     pygame.quit()
                     sys.exit()
+
+                if event.type == MUSIC_LOOP_EVENT:
+                    pygame.mixer.music.load(MUSIC_LOOP)
+                    pygame.mixer.music.play(-1)
                 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_x = event.pos[0] * width / self.screen.get_width()
@@ -171,43 +189,47 @@ class Game:
                     
                     # Restart Button
                     # Needs to be first to properly check you are out of cards.
-                    if 52 - len(self.deck.played_cards) == 0:
+                    if self.deck_size - len(self.deck.played_cards) == 0:
                         if restart_button.collidepoint(mouse_x, mouse_y):
                             self.old_card = False
                             self.streak = 0
                             self.deck = Deck()
                             self.deck.shuffle()
                             self.new_card = self.deck.draw()
+                            self.audio_shuffle.play()
                             self.highscore = max(self.highscore, self.score)
                             self.score = 0
                     
                     # Higher button
-                    if higher_button.collidepoint(mouse_x, mouse_y) and 52 - len(self.deck.played_cards) > 0:
+                    if higher_button.collidepoint(mouse_x, mouse_y) and self.deck_size - len(self.deck.played_cards) > 0:
                         if self.new_card is not None:
                             self.old_card = self.new_card
                         self.new_card = self.deck.draw()
+                        self.audio_card_place.play()
                         self.compare("higher")
-                        if 52 - len(self.deck.played_cards) == 0 and self.highscore < self.score:
+                        if self.deck_size - len(self.deck.played_cards) == 0 and self.highscore < self.score:
                                 with open("highscore.json", "w") as file:
                                     file.write(json.dumps({"highscore": self.score}))
 
                     # Lower button
-                    if lower_button.collidepoint(mouse_x, mouse_y) and 52 - len(self.deck.played_cards) > 0:
+                    if lower_button.collidepoint(mouse_x, mouse_y) and self.deck_size - len(self.deck.played_cards) > 0:
                         if self.new_card is not None:
                             self.old_card = self.new_card
                         self.new_card = self.deck.draw()
+                        self.audio_card_place.play()
                         self.compare("lower")
-                        if 52 - len(self.deck.played_cards) == 0 and self.highscore < self.score:
+                        if self.deck_size - len(self.deck.played_cards) == 0 and self.highscore < self.score:
                                 with open("highscore.json", "w") as file:
                                     file.write(json.dumps({"highscore": self.score}))
                     
                     # Same button
-                    if same_button.collidepoint(mouse_x, mouse_y) and 52 - len(self.deck.played_cards) > 0:
+                    if same_button.collidepoint(mouse_x, mouse_y) and self.deck_size - len(self.deck.played_cards) > 0:
                         if self.new_card is not None:
                             self.old_card = self.new_card
                         self.new_card = self.deck.draw()
+                        self.audio_card_place.play()
                         self.compare("same")
-                        if 52 - len(self.deck.played_cards) == 0 and self.highscore < self.score:
+                        if self.deck_size - len(self.deck.played_cards) == 0 and self.highscore < self.score:
                                 with open("highscore.json", "w") as file:
                                     file.write(json.dumps({"highscore": self.score}))
             
