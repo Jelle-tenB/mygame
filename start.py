@@ -5,8 +5,8 @@ import pygame
 
 from deck import Deck
 
-MUSIC_INTRO = "Jankis_Lair_intro.ogg"
-MUSIC_LOOP = "Jankis_Lair_loop.ogg"
+MUSIC_INTRO = "media/Jankis_Lair_intro.ogg"
+MUSIC_LOOP = "media/Jankis_Lair_loop.ogg"
 MUSIC_LOOP_EVENT = pygame.USEREVENT + 1
 
 
@@ -37,19 +37,31 @@ class Game:
         self.new_card = self.deck.draw()
         self.deck_size = self.deck.deck_size
         
-        self.card_front = self.load_image("deck_classic_light_4color_1.png")
-        self.background = self.load_image("background.png")
+        self.card_front = self.load_image("media/deck_classic_light_4color_1.png")
+        self.background = self.load_image("media/background.png")
         self.background = pygame.transform.smoothscale(self.background, (640, 480))
         
-        self.audio_card_place = pygame.mixer.Sound('short-card-place-1.ogg')
+        self.audio_card_place = pygame.mixer.Sound('media/short-card-place-1.ogg')
         self.audio_card_place.set_volume(0.3)
-        self.audio_shuffle = pygame.mixer.Sound('short-card-fan-1.ogg')
+        self.audio_shuffle = pygame.mixer.Sound('media/short-card-fan-1.ogg')
         self.audio_shuffle.set_volume(0.4)
 
         pygame.mixer.music.set_endevent(MUSIC_LOOP_EVENT)
         pygame.mixer.music.set_volume(0.3)
         pygame.mixer.music.load(MUSIC_INTRO)
         pygame.mixer.music.play()
+        
+        # self.display.fill((0, 0, 0, 0))  # Clear the screen with black
+        self.display.blit(self.background, (0, 0))
+        width = self.display.get_width()
+        height = self.display.get_height()
+        
+        #Display rules
+        self.display.blit(self.small_font.render('Choose wether the next card is higher, lower or same rank', True, (1,1,1)), (width / 4 + 50, height - 45))
+        self.display.blit(self.small_font.render('Ace is the lowest card, King the highest', True, (1,1,1)), (width / 4 + 50, height - 35))
+        self.display.blit(self.small_font.render('Streak of 2 = 2 points, streak 5 = 3, streak 10 = 5', True, (1,1,1)), (width / 4 + 50, height - 25))
+        self.display.blit(self.small_font.render('Correct "same" bet gives 10 points times streak multiplier', True, (1,1,1)), (width / 4 + 50, height - 15))
+        self.base_display = self.display.copy()
 
 
     def load_image(self, imgName: str) -> pygame.Surface:
@@ -108,17 +120,9 @@ class Game:
 
     def run(self):
         while self.running:
-
-            self.display.fill((0, 0, 0, 0))  # Clear the screen with black
-            self.display.blit(self.background, (0, 0))
+            self.display.blit(self.base_display, (0, 0))
             width = self.display.get_width()
             height = self.display.get_height()
-            
-            #Display rules
-            self.display.blit(self.small_font.render('Choose wether the next card is higher, lower or same rank', True, (1,1,1)), (width / 4 + 50, height - 45))
-            self.display.blit(self.small_font.render('Ace is the lowest card, King the highest', True, (1,1,1)), (width / 4 + 50, height - 35))
-            self.display.blit(self.small_font.render('Streak of 2 = 2 points, streak 5 = 3, streak 10 = 5', True, (1,1,1)), (width / 4 + 50, height - 25))
-            self.display.blit(self.small_font.render('Correct "same" bet gives 10 points times streak multiplier', True, (1,1,1)), (width / 4 + 50, height - 15))
             
             # Old card underneath the new card
             if self.old_card is not False:
