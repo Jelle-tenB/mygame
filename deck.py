@@ -3,6 +3,7 @@ import random
 
 class Deck:
     def __init__(self):
+        # Deck size cannot be lower than 4!
         self.deck_size = 52
         self.cards = list(range(self.deck_size))
         self.position = 0
