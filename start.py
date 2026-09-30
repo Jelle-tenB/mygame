@@ -20,6 +20,8 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.play_state = True
+        self.selected_menu_card = None
+        self.menu_card_rects = []
 
         self.font = pygame.font.SysFont('Helvetica', 15)
         self.small_font = pygame.font.SysFont('Helvetica', 10)
@@ -155,7 +157,7 @@ class Game:
         #Streak display
         self.display.blit(self.font.render(f'Streak: {self.streak}', True, (1, 1, 1)), (self.width / 2 - 38, 80))
         
-        # Display played cards from top left to bottom left
+        #Played cards displayed from top left to bottom left
         if self.deck.played_cards:
             sorted_played_cards = sorted(self.deck.played_cards)
             for i, value in enumerate(sorted_played_cards[:-1]):
@@ -177,9 +179,24 @@ class Game:
 
     def draw_menu(self):
         self.display.blit(self.background, (0, 0))
+        self.remove_card_rects = []
+        self.add_card_rects = []
 
-        cards_to_remove = random.sample(self.deck.cards, 4)
-        cards_to_add = random.sample(range(self.deck.deck_size), 4)
+        #Cards to remove display
+        for i, card in enumerate(self.cards_to_remove):
+            card_rect = pygame.Rect(10 + 50 * i, 10, 40, 60)
+            self.remove_card_rects.append(card_rect)
+            if i == self.selected_menu_card:
+                pygame.draw.rect(self.display, (255, 220, 40), card_rect.inflate(4, 4), 2)
+            self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
+        
+        #Cards to add display
+        for i, card in enumerate(self.cards_to_add):
+                    card_rect = pygame.Rect(10 + 50 * i, 100, 40, 60)
+                    self.add_card_rects.append(card_rect)
+                    if i == self.selected_menu_card:
+                        pygame.draw.rect(self.display, (255, 220, 40), card_rect.inflate(4, 4), 2)
+                    self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
     
     
     def handle_game_click(self, mouse_pos: list):
@@ -198,6 +215,8 @@ class Game:
                 self.audio_shuffle.play()
                 self.highscore = max(self.highscore, self.score)
                 self.score = 0
+                self.cards_to_remove = random.sample(self.deck.cards, 4)
+                self.cards_to_add = random.sample(range(self.deck.deck_size), 4)
                 self.play_state = False
         
         # Higher button
@@ -225,7 +244,13 @@ class Game:
     
     
     def handle_menu_click(self, mouse_pos: list):
-        pass
+        mouse_x = mouse_pos[0] * self.width / self.screen.get_width()
+        mouse_y = mouse_pos[1] * self.height / self.screen.get_height()
+
+        for index, card_rect in enumerate(self.menu_card_rects):
+            if card_rect.collidepoint(mouse_x, mouse_y):
+                self.selected_menu_card = index
+                return
 
 
     def run(self):

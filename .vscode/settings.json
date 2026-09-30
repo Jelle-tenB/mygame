@@ -5,6 +5,7 @@
         "colorkey",
         "highscore",
         "MOUSEBUTTONDOWN",
+        "rects",
         "smoothscale"
     ]
 }
