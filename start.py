@@ -20,8 +20,10 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.play_state = True
-        self.selected_menu_card = None
-        self.menu_card_rects = []
+        self.selected_add_card = None
+        self.selected_remove_card = None
+        self.remove_card_rects = []
+        self.add_card_rects = []
 
         self.font = pygame.font.SysFont('Helvetica', 15)
         self.small_font = pygame.font.SysFont('Helvetica', 10)
@@ -42,7 +44,6 @@ class Game:
         self.deck = Deck()
         self.deck.shuffle()
         self.new_card = self.deck.draw()
-        self.deck_size = self.deck.deck_size
         
         self.card_front = self.load_image("media/deck_classic_light_4color_1.png")
         self.background = self.load_image("media/background.png")
@@ -58,8 +59,6 @@ class Game:
         pygame.mixer.music.load(MUSIC_INTRO)
         pygame.mixer.music.play()
         
-        
-
 
     def load_image(self, imgName: str) -> pygame.Surface:
         img = pygame.image.load(imgName).convert()
@@ -149,7 +148,7 @@ class Game:
         self.display.blit(self.font.render(f'Highscore: {"69 nice" if self.highscore == 69 else self.highscore}', True, (1, 1, 1)), (self.width / 2 - 63, 20))
         
         #Cards left display
-        self.display.blit(self.font.render(f'Cards left: {self.deck_size - len(self.deck.played_cards)}', True, (1, 1, 1)), (self.width / 2 - 59, 40))
+        self.display.blit(self.font.render(f'Cards left: {len(self.deck.cards) - len(self.deck.played_cards)}', True, (1, 1, 1)), (self.width / 2 - 59, 40))
         
         #Score display
         self.display.blit(self.font.render(f'Score: {"69 nice" if self.score == 69 else self.score}', True, (1, 1, 1)), (self.width / 2 - 35, 60))
@@ -171,7 +170,7 @@ class Game:
                 self.display.blit(self.card_front, dest=(0, len(self.deck.played_cards) * 15 - 15), area=self.getCardFront(self.deck.get_suit(sorted_played_cards[-1]), self.deck.get_rank(sorted_played_cards[-1])))
         
         #Next button
-        if self.deck_size - len(self.deck.played_cards) == 0:
+        if len(self.deck.cards) - len(self.deck.played_cards) == 0:
             self.next_button = pygame.Rect(self.width / 2 - 25, self.height / 2 - 25, 50, 50)
             pygame.draw.rect(self.display, (100, 100, 255), self.next_button)
             self.display.blit(self.font.render('Next', True, (1, 1, 1)), (self.width / 2 - 17, self.height / 2 - 10))
@@ -179,33 +178,43 @@ class Game:
 
     def draw_menu(self):
         self.display.blit(self.background, (0, 0))
-        self.remove_card_rects = []
-        self.add_card_rects = []
 
         #Cards to remove display
         for i, card in enumerate(self.cards_to_remove):
-            card_rect = pygame.Rect(10 + 50 * i, 10, 40, 60)
+            card_rect = pygame.Rect(10 + 50 * i, 30, 40, 60)
             self.remove_card_rects.append(card_rect)
-            if i == self.selected_menu_card:
+            if i == self.selected_remove_card:
                 pygame.draw.rect(self.display, (255, 220, 40), card_rect.inflate(4, 4), 2)
             self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
         
+        self.display.blit(self.font.render('Select a card to remove from the deck', True, (1, 1, 1)), (5, 5))
+        #Remove card button
+        self.remove_button = pygame.Rect(65, 100, 80, 30)
+        pygame.draw.rect(self.display, (255, 0, 0), self.remove_button)
+        self.display.blit(self.font.render('Remove', True, (1, 1, 1)), (77, 105))
+        
         #Cards to add display
         for i, card in enumerate(self.cards_to_add):
-                    card_rect = pygame.Rect(10 + 50 * i, 100, 40, 60)
-                    self.add_card_rects.append(card_rect)
-                    if i == self.selected_menu_card:
-                        pygame.draw.rect(self.display, (255, 220, 40), card_rect.inflate(4, 4), 2)
-                    self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
-    
-    
+            card_rect = pygame.Rect(10 + 50 * i, 170, 40, 60)
+            self.add_card_rects.append(card_rect)
+            if i == self.selected_add_card:
+                pygame.draw.rect(self.display, (255, 220, 40), card_rect.inflate(4, 4), 2)
+            self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
+        
+        self.display.blit(self.font.render('Select a card to add to the deck', True, (1, 1, 1)), (5, 145))
+        #Add card button
+        self.add_button = pygame.Rect(65, 240, 80, 30)
+        pygame.draw.rect(self.display, (0, 255, 0), self.add_button)
+        self.display.blit(self.font.render('Add', True, (1, 1, 1)), (92, 245))
+
+
     def handle_game_click(self, mouse_pos: list):
         mouse_x = mouse_pos[0] * self.width / self.screen.get_width()
         mouse_y = mouse_pos[1] * self.height / self.screen.get_height()
         
         # Next Button
         # Needs to be first to properly check you are out of cards.
-        if self.deck_size - len(self.deck.played_cards) == 0:
+        if len(self.deck.cards) - len(self.deck.played_cards) == 0:
             if self.next_button.collidepoint(mouse_x, mouse_y):
                 self.old_card = False
                 self.streak = 0
@@ -216,19 +225,19 @@ class Game:
                 self.highscore = max(self.highscore, self.score)
                 self.score = 0
                 self.cards_to_remove = random.sample(self.deck.cards, 4)
-                self.cards_to_add = random.sample(range(self.deck.deck_size), 4)
+                self.cards_to_add = random.sample(range(52), 4)
                 self.play_state = False
         
         # Higher button
-        if self.higher_button.collidepoint(mouse_x, mouse_y) and self.deck_size - len(self.deck.played_cards) > 0:
+        if self.higher_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
             self.game_bet_click("higher")
 
         # Lower button
-        if self.lower_button.collidepoint(mouse_x, mouse_y) and self.deck_size - len(self.deck.played_cards) > 0:
+        if self.lower_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
             self.game_bet_click("lower")
         
         # Same button
-        if self.same_button.collidepoint(mouse_x, mouse_y) and self.deck_size - len(self.deck.played_cards) > 0:
+        if self.same_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
             self.game_bet_click("same")
     
     
@@ -238,7 +247,7 @@ class Game:
         self.new_card = self.deck.draw()
         self.audio_card_place.play()
         self.compare(bet)
-        if self.deck_size - len(self.deck.played_cards) == 0 and self.highscore < self.score:
+        if len(self.deck.cards) - len(self.deck.played_cards) == 0 and self.highscore < self.score:
                 with open("highscore.json", "w") as file:
                     file.write(json.dumps({"highscore": self.score}))
     
@@ -247,10 +256,28 @@ class Game:
         mouse_x = mouse_pos[0] * self.width / self.screen.get_width()
         mouse_y = mouse_pos[1] * self.height / self.screen.get_height()
 
-        for index, card_rect in enumerate(self.menu_card_rects):
+        for index, card_rect in enumerate(self.add_card_rects):
             if card_rect.collidepoint(mouse_x, mouse_y):
-                self.selected_menu_card = index
+                self.selected_add_card = index
                 return
+        
+        for index, card_rect in enumerate(self.remove_card_rects):
+            if card_rect.collidepoint(mouse_x, mouse_y):
+                self.selected_remove_card = index
+                return
+        
+        if self.add_button.collidepoint(mouse_x, mouse_y):
+            if self.selected_add_card is not None:
+                card_to_add = self.cards_to_add[self.selected_add_card]
+                self.deck.cards.append(card_to_add)
+                self.selected_add_card = None
+        
+        if self.remove_button.collidepoint(mouse_x, mouse_y):
+            if self.selected_remove_card is not None:
+                card_to_remove = self.cards_to_remove[self.selected_remove_card]
+                if card_to_remove in self.deck.cards:
+                    self.deck.cards.remove(card_to_remove)
+                    self.selected_remove_card = None
 
 
     def run(self):

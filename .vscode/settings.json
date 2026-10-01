@@ -3,9 +3,12 @@
         "blit",
         "collidepoint",
         "colorkey",
+        "endevent",
         "highscore",
+        "jankis",
         "MOUSEBUTTONDOWN",
         "rects",
-        "smoothscale"
+        "smoothscale",
+        "userevent"
     ]
 }
