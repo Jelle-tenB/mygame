@@ -31,6 +31,12 @@ class Game:
         self.score = 0
         self.old_card = False
         self.streak = 0
+        self.costs = {
+            'add' : 10,
+            'remove' : 20,
+            'times added' : 1,
+            'times removed' : 1
+        }
         
         self.width = self.display.get_width()
         self.height = self.display.get_height()
@@ -114,14 +120,24 @@ class Game:
             self.streak = 0
     
     
+    def get_costs(self, action: str) -> int:
+        if action == "add":
+            return self.costs["add"] * self.costs["times added"]
+        elif action == "remove":
+            return self.costs["remove"] * self.costs["times removed"]
+        else:
+            raise ValueError("Invalid action. Must be 'add' or 'remove'.")
+    
+    
     def draw_game(self):
         self.display.blit(self.background, (0, 0))
         
         #Display rules
-        self.display.blit(self.small_font.render('Choose wether the next card is higher, lower or same rank', True, (1,1,1)), (self.width / 4 + 50, self.height - 45))
-        self.display.blit(self.small_font.render('Ace is the lowest card, King the highest', True, (1,1,1)), (self.width / 4 + 50, self.height - 35))
-        self.display.blit(self.small_font.render('Streak of 2 = 2 points, streak 5 = 3, streak 10 = 5', True, (1,1,1)), (self.width / 4 + 50, self.height - 25))
-        self.display.blit(self.small_font.render('Correct "same" bet gives 10 points times streak multiplier', True, (1,1,1)), (self.width / 4 + 50, self.height - 15))
+        self.display.blit(self.small_font.render('Choose wether the next card is higher, lower or same rank.', True, (1,1,1)), (self.width / 4 + 50, self.height - 55))
+        self.display.blit(self.small_font.render('Ace is the lowest card, King the highest.', True, (1,1,1)), (self.width / 4 + 50, self.height - 45))
+        self.display.blit(self.small_font.render('Streak of 2 = 2 points, streak 5 = 3, streak 10 = 5.', True, (1,1,1)), (self.width / 4 + 50, self.height - 35))
+        self.display.blit(self.small_font.render('Correct "same" bet gives 10 points times streak multiplier.', True, (1,1,1)), (self.width / 4 + 50, self.height - 25))
+        self.display.blit(self.small_font.render('You can spend Score in the shop for upgrades.', True, (1,1,1)), (self.width / 4 + 50, self.height - 15))
         
         # Old card underneath the new card
         if self.old_card is not False:
@@ -178,6 +194,9 @@ class Game:
 
     def draw_menu(self):
         self.display.blit(self.background, (0, 0))
+        
+        #Score display
+        self.display.blit(self.font.render(f'Score: {self.score}', True, (1, 1, 1)), (self.width / 2 - 30, 20))
 
         #Cards to remove display
         for i, card in enumerate(self.cards_to_remove):
@@ -186,12 +205,14 @@ class Game:
             if i == self.selected_remove_card:
                 pygame.draw.rect(self.display, (255, 220, 40), card_rect.inflate(4, 4), 2)
             self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
-        
         self.display.blit(self.font.render('Select a card to remove from the deck', True, (1, 1, 1)), (5, 5))
+        
         #Remove card button
         self.remove_button = pygame.Rect(65, 100, 80, 30)
         pygame.draw.rect(self.display, (255, 0, 0), self.remove_button)
         self.display.blit(self.font.render('Remove', True, (1, 1, 1)), (77, 105))
+        #Remove card cost display
+        self.display.blit(self.font.render(f'Costs {self.get_costs("remove")} Score', True, (1, 1, 1)), (150, 105))
         
         #Cards to add display
         for i, card in enumerate(self.cards_to_add):
@@ -200,12 +221,19 @@ class Game:
             if i == self.selected_add_card:
                 pygame.draw.rect(self.display, (255, 220, 40), card_rect.inflate(4, 4), 2)
             self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
-        
         self.display.blit(self.font.render('Select a card to add to the deck', True, (1, 1, 1)), (5, 145))
+        
         #Add card button
         self.add_button = pygame.Rect(65, 240, 80, 30)
         pygame.draw.rect(self.display, (0, 255, 0), self.add_button)
         self.display.blit(self.font.render('Add', True, (1, 1, 1)), (92, 245))
+        #Add card cost display
+        self.display.blit(self.font.render(f'Costs {self.get_costs("add")} Score', True, (1, 1, 1)), (150, 245))
+        
+        #Next button
+        self.next_button = pygame.Rect(self.width / 2 - 25, self.height - 75, 50, 50)
+        pygame.draw.rect(self.display, (100, 100, 255), self.next_button)
+        self.display.blit(self.font.render('Next', True, (1, 1, 1)), (self.width / 2 - 17, self.height - 60))
 
 
     def handle_game_click(self, mouse_pos: list):
@@ -218,12 +246,8 @@ class Game:
             if self.next_button.collidepoint(mouse_x, mouse_y):
                 self.old_card = False
                 self.streak = 0
-                # self.deck = Deck()
-                # self.deck.shuffle()
-                # self.new_card = self.deck.draw()
                 self.audio_shuffle.play()
                 self.highscore = max(self.highscore, self.score)
-                self.score = 0
                 self.cards_to_remove = random.sample(self.deck.cards, 4)
                 self.cards_to_add = random.sample(range(52), 4)
                 self.play_state = False
@@ -256,28 +280,44 @@ class Game:
         mouse_x = mouse_pos[0] * self.width / self.screen.get_width()
         mouse_y = mouse_pos[1] * self.height / self.screen.get_height()
 
+        #Selecting card to add
         for index, card_rect in enumerate(self.add_card_rects):
             if card_rect.collidepoint(mouse_x, mouse_y):
                 self.selected_add_card = index
                 return
         
+        #Selecting card to remove
         for index, card_rect in enumerate(self.remove_card_rects):
             if card_rect.collidepoint(mouse_x, mouse_y):
                 self.selected_remove_card = index
                 return
         
+        #Add button
         if self.add_button.collidepoint(mouse_x, mouse_y):
-            if self.selected_add_card is not None:
+            if self.selected_add_card is not None and self.score >= self.get_costs("add"):
                 card_to_add = self.cards_to_add[self.selected_add_card]
                 self.deck.cards.append(card_to_add)
                 self.selected_add_card = None
+                self.score -= self.get_costs("add")
+                self.costs["times added"] += 1
         
+        #Remove button
         if self.remove_button.collidepoint(mouse_x, mouse_y):
-            if self.selected_remove_card is not None:
+            if self.selected_remove_card is not None and self.score >= self.get_costs("remove"):
                 card_to_remove = self.cards_to_remove[self.selected_remove_card]
                 if card_to_remove in self.deck.cards:
                     self.deck.cards.remove(card_to_remove)
                     self.selected_remove_card = None
+                    self.score -= self.get_costs("remove")
+                    self.costs["times removed"] += 1
+        
+        #Next button
+        if self.next_button.collidepoint(mouse_x, mouse_y):
+            self.deck.played_cards = []
+            self.deck.shuffle()
+            self.new_card = self.deck.draw()
+            self.play_state = True
+            self.audio_shuffle.play()
 
 
     def run(self):
