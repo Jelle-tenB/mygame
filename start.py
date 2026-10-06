@@ -20,16 +20,17 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.play_state = True
+        self.old_card = False
         self.selected_add_card = None
         self.selected_remove_card = None
         self.remove_card_rects = []
         self.add_card_rects = []
+        self.card_to_remove = None
 
         self.font = pygame.font.SysFont('Helvetica', 15)
         self.small_font = pygame.font.SysFont('Helvetica', 10)
 
         self.score = 0
-        self.old_card = False
         self.streak = 0
         self.costs = {
             'add' : 10,
@@ -63,7 +64,7 @@ class Game:
         pygame.mixer.music.set_endevent(MUSIC_LOOP_EVENT)
         pygame.mixer.music.set_volume(0.3)
         pygame.mixer.music.load(MUSIC_INTRO)
-        pygame.mixer.music.play()
+        # pygame.mixer.music.play()
         
 
     def load_image(self, imgName: str) -> pygame.Surface:
@@ -133,17 +134,23 @@ class Game:
         self.display.blit(self.background, (0, 0))
         
         #Display rules
-        self.display.blit(self.small_font.render('Choose wether the next card is higher, lower or same rank.', True, (1,1,1)), (self.width / 4 + 50, self.height - 55))
+        self.display.blit(self.small_font.render('Choose wether the next card is higher, lower or same in rank.', True, (1,1,1)), (self.width / 4 + 50, self.height - 55))
         self.display.blit(self.small_font.render('Ace is the lowest card, King the highest.', True, (1,1,1)), (self.width / 4 + 50, self.height - 45))
-        self.display.blit(self.small_font.render('Streak of 2 = 2 points, streak 5 = 3, streak 10 = 5.', True, (1,1,1)), (self.width / 4 + 50, self.height - 35))
-        self.display.blit(self.small_font.render('Correct "same" bet gives 10 points times streak multiplier.', True, (1,1,1)), (self.width / 4 + 50, self.height - 25))
+        self.display.blit(self.small_font.render('Streak of 2 = 2 Score, streak 5 = 3, streak 10 = 5.', True, (1,1,1)), (self.width / 4 + 50, self.height - 35))
+        self.display.blit(self.small_font.render('Correct "same" bet gives 10 Score times streak multiplier.', True, (1,1,1)), (self.width / 4 + 50, self.height - 25))
         self.display.blit(self.small_font.render('You can spend Score in the shop for upgrades.', True, (1,1,1)), (self.width / 4 + 50, self.height - 15))
         
         # Old card underneath the new card
         if self.old_card is not False:
-            self.display.blit(self.card_front, dest=(self.width / 2 - 20, self.height / 4), area=self.getHalfCardFront(self.deck.get_suit(self.old_card), self.deck.get_rank(self.old_card)))
+            self.display.blit(
+                self.card_front,
+                dest=(self.width / 2 - 20, self.height / 4),
+                area=self.getHalfCardFront(self.deck.get_suit(self.old_card), self.deck.get_rank(self.old_card)))
         # New card second, so its on top of old card
-        self.display.blit(self.card_front, dest=(self.width / 2 - 20, self.height / 4 + 15), area=self.getCardFront(self.deck.get_suit(self.new_card), self.deck.get_rank(self.new_card)))
+        self.display.blit(
+            self.card_front,
+            dest=(self.width / 2 - 20, self.height / 4 + 15),
+            area=self.getCardFront(self.deck.get_suit(self.new_card), self.deck.get_rank(self.new_card)))
         
         #Higher button
         self.higher_button = pygame.Rect(self.width / 2 - 80, self.height / 2 + 50, 50, 50)
@@ -161,13 +168,19 @@ class Game:
         self.display.blit(self.font.render('Same', True, (1, 1, 1)), (self.width / 2 + 35, self.height / 2 + 65))
         
         #Highscore display
-        self.display.blit(self.font.render(f'Highscore: {"69 nice" if self.highscore == 69 else self.highscore}', True, (1, 1, 1)), (self.width / 2 - 63, 20))
+        self.display.blit(
+            self.font.render(f'Highscore: {"69 nice" if self.highscore == 69 else self.highscore}',
+                             True, (1, 1, 1)), (self.width / 2 - 63, 20))
         
         #Cards left display
-        self.display.blit(self.font.render(f'Cards left: {len(self.deck.cards) - len(self.deck.played_cards)}', True, (1, 1, 1)), (self.width / 2 - 59, 40))
+        self.display.blit(
+            self.font.render(f'Cards left: {len(self.deck.cards) - len(self.deck.played_cards)}',
+                             True, (1, 1, 1)), (self.width / 2 - 59, 40))
         
         #Score display
-        self.display.blit(self.font.render(f'Score: {"69 nice" if self.score == 69 else self.score}', True, (1, 1, 1)), (self.width / 2 - 35, 60))
+        self.display.blit(
+            self.font.render(f'Score: {"69 nice" if self.score == 69 else self.score}',
+                             True, (1, 1, 1)), (self.width / 2 - 35, 60))
         
         #Streak display
         self.display.blit(self.font.render(f'Streak: {self.streak}', True, (1, 1, 1)), (self.width / 2 - 38, 80))
@@ -177,13 +190,25 @@ class Game:
             sorted_played_cards = sorted(self.deck.played_cards)
             for i, value in enumerate(sorted_played_cards[:-1]):
                 if i < 32:
-                    self.display.blit(self.card_front, dest=(0, i * 15), area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
+                    self.display.blit(
+                        self.card_front,
+                        dest=(0, i * 15),
+                        area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
                 else:
-                    self.display.blit(self.card_front, dest=(40, (i * 15) - 32 * 15), area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
+                    self.display.blit(
+                        self.card_front,
+                        dest=(40, (i * 15) - 32 * 15),
+                        area=self.getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
             if len(self.deck.played_cards) > 32:
-                self.display.blit(self.card_front, dest=(40, len(self.deck.played_cards) * 15 - 32 * 15 - 15), area=self.getCardFront(self.deck.get_suit(sorted_played_cards[-1]), self.deck.get_rank(sorted_played_cards[-1])))
+                self.display.blit(
+                    self.card_front,
+                    dest=(40, len(self.deck.played_cards) * 15 - 32 * 15 - 15),
+                    area=self.getCardFront(self.deck.get_suit(sorted_played_cards[-1]), self.deck.get_rank(sorted_played_cards[-1])))
             else:
-                self.display.blit(self.card_front, dest=(0, len(self.deck.played_cards) * 15 - 15), area=self.getCardFront(self.deck.get_suit(sorted_played_cards[-1]), self.deck.get_rank(sorted_played_cards[-1])))
+                self.display.blit(
+                    self.card_front,
+                    dest=(0, len(self.deck.played_cards) * 15 - 15),
+                    area=self.getCardFront(self.deck.get_suit(sorted_played_cards[-1]), self.deck.get_rank(sorted_played_cards[-1])))
         
         #Next button
         if len(self.deck.cards) - len(self.deck.played_cards) == 0:
@@ -197,6 +222,9 @@ class Game:
         
         #Score display
         self.display.blit(self.font.render(f'Score: {self.score}', True, (1, 1, 1)), (self.width / 2 - 30, 20))
+        
+        #Deck size display
+        self.display.blit(self.font.render(f'Deck size: {len(self.deck.cards)}', True, (1, 1, 1)), (self.width / 2 - 57, 40))
 
         #Cards to remove display
         for i, card in enumerate(self.cards_to_remove):
@@ -204,7 +232,13 @@ class Game:
             self.remove_card_rects.append(card_rect)
             if i == self.selected_remove_card:
                 pygame.draw.rect(self.display, (255, 220, 40), card_rect.inflate(4, 4), 2)
-            self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
+            if self.card_to_remove == card:
+                self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
+                overlay = pygame.Surface(card_rect.size, pygame.SRCALPHA)
+                overlay.fill((128, 128, 128, 150))
+                self.display.blit(overlay, card_rect.topleft)
+            else:
+                self.display.blit(self.card_front, dest=card_rect.topleft, area=self.getCardFront(self.deck.get_suit(card), self.deck.get_rank(card)))
         self.display.blit(self.font.render('Select a card to remove from the deck', True, (1, 1, 1)), (5, 5))
         
         #Remove card button
@@ -229,6 +263,11 @@ class Game:
         self.display.blit(self.font.render('Add', True, (1, 1, 1)), (92, 245))
         #Add card cost display
         self.display.blit(self.font.render(f'Costs {self.get_costs("add")} Score', True, (1, 1, 1)), (150, 245))
+        
+        #Rules display
+        self.display.blit(
+            self.small_font.render('Your deck can never be smaller than 4 cards or larger than 64 cards.', True, (1,1,1)),
+            (self.width / 4 + 5, self.height - 90))
         
         #Next button
         self.next_button = pygame.Rect(self.width / 2 - 25, self.height - 75, 50, 50)
@@ -294,7 +333,9 @@ class Game:
         
         #Add button
         if self.add_button.collidepoint(mouse_x, mouse_y):
-            if self.selected_add_card is not None and self.score >= self.get_costs("add"):
+            if (self.selected_add_card is not None and
+                self.score >= self.get_costs("add") and
+                len(self.deck.cards) <= 64):  # Ensure deck size doesn't exceed 64
                 card_to_add = self.cards_to_add[self.selected_add_card]
                 self.deck.cards.append(card_to_add)
                 self.selected_add_card = None
@@ -303,10 +344,12 @@ class Game:
         
         #Remove button
         if self.remove_button.collidepoint(mouse_x, mouse_y):
-            if self.selected_remove_card is not None and self.score >= self.get_costs("remove"):
-                card_to_remove = self.cards_to_remove[self.selected_remove_card]
-                if card_to_remove in self.deck.cards:
-                    self.deck.cards.remove(card_to_remove)
+            if (self.selected_remove_card is not None and
+                self.score >= self.get_costs("remove") and
+                len(self.deck.cards) > 4):  # Ensure deck size doesn't go below 4
+                self.card_to_remove = self.cards_to_remove[self.selected_remove_card]
+                if self.card_to_remove in self.deck.cards:
+                    self.deck.cards.remove(self.card_to_remove)
                     self.selected_remove_card = None
                     self.score -= self.get_costs("remove")
                     self.costs["times removed"] += 1
@@ -343,7 +386,8 @@ class Game:
                     else:
                         self.handle_menu_click(event.pos)
             
-            self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))  # Scale the display to the screen size
+            # Scale the display to the screen size
+            self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.update()  # Update the display
             self.clock.tick(30)  # Limit to 30 frames per second
 

@@ -4,7 +4,7 @@ import random
 class Deck:
     def __init__(self):
         # Deck size cannot be lower than 4!
-        self.start_size = 5
+        self.start_size = 52
         self.cards = list(range(self.start_size))
         self.position = 0
         self.played_cards = []
