@@ -9,6 +9,7 @@
         "MOUSEBUTTONDOWN",
         "rects",
         "smoothscale",
+        "SRCALPHA",
         "userevent"
     ]
 }
