@@ -5,7 +5,7 @@ import sys
 import pygame
 
 from deck import Deck
-from utils import costs, getCosts, getCardFront, getHalfCardFront, loadImage
+from utils import costs, getCardFront, getCosts, getHalfCardFront, loadImage
 
 MUSIC_INTRO = "media/Jankis_Lair_intro.ogg"
 MUSIC_LOOP = "media/Jankis_Lair_loop.ogg"
