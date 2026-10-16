@@ -183,6 +183,10 @@ class Game:
             self.next_button = pygame.Rect(self.width / 2 - 25, self.height / 2 - 25, 50, 50)
             pygame.draw.rect(self.display, (100, 100, 255), self.next_button)
             self.display.blit(self.font.render('Next', True, (1, 1, 1)), (self.width / 2 - 17, self.height / 2 - 10))
+        
+        #View Deck button
+        self.view_deck_button = pygame.Rect(self.width / 2 - 25, self.height / 2 + 105, 50, 50)
+        pygame.draw.rect(self.display, (255, 255, 100), self.view_deck_button)
 
 
     def handleGameClick(self, mouse_pos: list):
@@ -291,6 +295,9 @@ class Game:
         self.next_button = pygame.Rect(self.width / 2 - 25, self.height - 75, 50, 50)
         pygame.draw.rect(self.display, (100, 100, 255), self.next_button)
         self.display.blit(self.font.render('Next', True, (1, 1, 1)), (self.width / 2 - 17, self.height - 60))
+        
+        #Show Deck button
+        
 
 
     def handleMenuClick(self, mouse_pos: list):
@@ -351,14 +358,41 @@ class Game:
             self.new_card = self.deck.draw()
             self.play_state = True
             self.audio_shuffle.play()
+        
+        #View Deck button
 
 
     def drawDeck(self):
-        # Display the full deck in rows of suits sorted by rank.
-        #TODO: Create 4 sorted lists for each suit, ONCE.
-            #TODO: Check if they fit on screen, if not make room.
-
-        pass
+        #Display whole deck from top right to bottom right
+        sorted_deck = sorted(self.deck.cards)
+        
+        if len(sorted_deck) < 32:
+            self.display.blit(self.background, (self.width - 40, 0), area=(self.width - 40, 0, 40, self.height))
+            overlay = pygame.Surface((self.width - 40, self.height), pygame.SRCALPHA)
+            overlay.fill((128, 128, 128, 150))
+            self.display.blit(overlay, (0, 0))
+        
+        for i, value in enumerate(sorted_deck[:-1]):
+            if i < 32:
+                self.display.blit(
+                    self.card_front,
+                    dest=(self.width - 40, i * 15),
+                    area=getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
+            else:
+                self.display.blit(
+                    self.card_front,
+                    dest=(self.width - 80, (i * 15) - 32 * 15),
+                    area=getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
+        if len(sorted_deck) > 32:
+            self.display.blit(
+                self.card_front,
+                dest=(self.width - 80, len(self.deck.played_cards) * 15 - 32 * 15 - 15),
+                area=getCardFront(self.deck.get_suit(sorted_deck[-1]), self.deck.get_rank(sorted_deck[-1])))
+        else:
+            self.display.blit(
+                self.card_front,
+                dest=(self.width - 40, len(self.deck.played_cards) * 15 - 15),
+                area=getCardFront(self.deck.get_suit(sorted_deck[-1]), self.deck.get_rank(sorted_deck[-1])))
 
 
     def run(self):
