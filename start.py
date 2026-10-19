@@ -27,7 +27,8 @@ class Game:
         self.display = pygame.Surface((640, 480))
         self.clock = pygame.time.Clock()
         self.running = True
-        self.play_state = True
+        self.play_state = "play"
+        self.previous_state = "play"
         self.old_card = False
         self.selected_add_card = None
         self.selected_remove_card = None
@@ -69,7 +70,7 @@ class Game:
         pygame.mixer.music.set_endevent(MUSIC_LOOP_EVENT)
         pygame.mixer.music.set_volume(0.3)
         pygame.mixer.music.load(MUSIC_INTRO)
-        # pygame.mixer.music.play()
+        pygame.mixer.music.play()
     
     
     def compare(self, bet: str):
@@ -185,8 +186,9 @@ class Game:
             self.display.blit(self.font.render('Next', True, (1, 1, 1)), (self.width / 2 - 17, self.height / 2 - 10))
         
         #View Deck button
-        self.view_deck_button = pygame.Rect(self.width / 2 - 25, self.height / 2 + 105, 50, 50)
+        self.view_deck_button = pygame.Rect(self.width / 2 - 40, self.height / 2 + 105, 80, 30)
         pygame.draw.rect(self.display, (255, 255, 100), self.view_deck_button)
+        self.display.blit(self.font.render('View Deck', True, (1, 1, 1)), (self.width / 2 - 35, self.height / 2 + 110))
 
 
     def handleGameClick(self, mouse_pos: list):
@@ -203,7 +205,7 @@ class Game:
                 self.highscore = max(self.highscore, self.score)
                 self.cards_to_remove = random.sample(self.deck.cards, 4)
                 self.cards_to_add = random.sample(range(52), 4)
-                self.play_state = False
+                self.play_state = "menu"
         
         # Higher button
         if self.higher_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
@@ -216,6 +218,12 @@ class Game:
         # Same button
         if self.same_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
             self.gameBetClick("same")
+        
+        # View Deck button
+        if self.view_deck_button.collidepoint(mouse_x, mouse_y):
+            self.deck_background = self.display.copy()
+            self.previous_state = self.play_state
+            self.play_state = "deck"
     
     
     def gameBetClick(self, bet: str):
@@ -296,8 +304,10 @@ class Game:
         pygame.draw.rect(self.display, (100, 100, 255), self.next_button)
         self.display.blit(self.font.render('Next', True, (1, 1, 1)), (self.width / 2 - 17, self.height - 60))
         
-        #Show Deck button
-        
+        #View Deck button
+        self.view_deck_button = pygame.Rect(self.width - 90, 10, 80, 30)
+        pygame.draw.rect(self.display, (255, 0, 0), self.view_deck_button)
+        self.display.blit(self.font.render('View Deck', True, (1, 1, 1)), (self.width - 85, 15))
 
 
     def handleMenuClick(self, mouse_pos: list):
@@ -356,51 +366,66 @@ class Game:
             #Prepare the deck for the next round.
             self.deck.shuffle()
             self.new_card = self.deck.draw()
-            self.play_state = True
+            self.play_state = "play"
             self.audio_shuffle.play()
         
         #View Deck button
+        if self.view_deck_button.collidepoint(mouse_x, mouse_y):
+            self.deck_background = self.display.copy()
+            self.previous_state = self.play_state
+            self.play_state = "deck"
 
 
     def drawDeck(self):
         #Display whole deck from top right to bottom right
         sorted_deck = sorted(self.deck.cards)
         
-        if len(sorted_deck) < 32:
-            self.display.blit(self.background, (self.width - 40, 0), area=(self.width - 40, 0, 40, self.height))
-            overlay = pygame.Surface((self.width - 40, self.height), pygame.SRCALPHA)
-            overlay.fill((128, 128, 128, 150))
-            self.display.blit(overlay, (0, 0))
+        self.display.blit(self.deck_background, (0, 0))
+        
+        self.display.blit(self.background, (self.width - 80, 0), area=(self.width - 80, 0, 80, self.height))
+        overlay = pygame.Surface((self.width - 80, self.height), pygame.SRCALPHA)
+        overlay.fill((128, 128, 128, 150))
+        self.display.blit(overlay, (0, 0))
         
         for i, value in enumerate(sorted_deck[:-1]):
             if i < 32:
                 self.display.blit(
                     self.card_front,
-                    dest=(self.width - 40, i * 15),
+                    dest=(self.width - 80, i * 15),
                     area=getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
             else:
                 self.display.blit(
                     self.card_front,
-                    dest=(self.width - 80, (i * 15) - 32 * 15),
+                    dest=(self.width - 40, (i * 15) - 32 * 15),
                     area=getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
         if len(sorted_deck) > 32:
             self.display.blit(
                 self.card_front,
-                dest=(self.width - 80, len(self.deck.played_cards) * 15 - 32 * 15 - 15),
+                dest=(self.width - 40, len(sorted_deck) * 15 - 32 * 15 - 15),
                 area=getCardFront(self.deck.get_suit(sorted_deck[-1]), self.deck.get_rank(sorted_deck[-1])))
         else:
             self.display.blit(
                 self.card_front,
-                dest=(self.width - 40, len(self.deck.played_cards) * 15 - 15),
+                dest=(self.width - 80, len(sorted_deck) * 15 - 15),
                 area=getCardFront(self.deck.get_suit(sorted_deck[-1]), self.deck.get_rank(sorted_deck[-1])))
+
+
+    def handleDeckClick(self, mouse_pos: list):
+        if mouse_pos[0] * self.width / self.screen.get_width() < self.width - 80:
+            if self.previous_state == "play":
+                self.play_state = "play"
+            elif self.previous_state == "menu":
+                self.play_state = "menu"
 
 
     def run(self):
         while self.running:
-            if self.play_state:
+            if self.play_state == "play":
                 self.drawGame()
-            else:
+            elif self.play_state == "menu":
                 self.drawMenu()
+            elif self.play_state == "deck":
+                self.drawDeck()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -413,10 +438,12 @@ class Game:
                     pygame.mixer.music.play(-1)
                 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.play_state:
+                    if self.play_state == "play":
                         self.handleGameClick(event.pos)
-                    else:
+                    elif self.play_state == "menu":
                         self.handleMenuClick(event.pos)
+                    elif self.play_state == "deck":
+                        self.handleDeckClick(event.pos)
             
             # Scale the display to the screen size
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
