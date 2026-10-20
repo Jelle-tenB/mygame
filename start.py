@@ -70,7 +70,7 @@ class Game:
         pygame.mixer.music.set_endevent(MUSIC_LOOP_EVENT)
         pygame.mixer.music.set_volume(0.3)
         pygame.mixer.music.load(MUSIC_INTRO)
-        pygame.mixer.music.play()
+        # pygame.mixer.music.play()
     
     
     def compare(self, bet: str):
