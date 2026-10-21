@@ -1,9 +1,9 @@
 import pygame
 
-#add 10, remove 20
+#add 10, remove 15
 costs = {
-            'add' : 0,
-            'remove' : 0,
+            'add' : 10,
+            'remove' : 10,
             'times added' : 1,
             'times removed' : 1
         }
@@ -38,8 +38,8 @@ def getHalfCardFront(suit: int, rank: int) -> tuple:
 
 def getCosts(action: str) -> int:
     if action == "add":
-        return costs["add"] * costs["times added"]
+        return costs["add"] + costs["times added"] * 5
     elif action == "remove":
-        return costs["remove"] * costs["times removed"]
+        return costs["remove"] + costs["times removed"] * 5
     else:
         raise ValueError("Invalid action. Must be 'add' or 'remove'.")
