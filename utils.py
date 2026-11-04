@@ -1,11 +1,11 @@
 import pygame
 
-#add 10, remove 15
+#add 10, remove 10
 costs = {
             'add' : 10,
             'remove' : 10,
-            'times added' : 1,
-            'times removed' : 1
+            'times added' : 0,
+            'times removed' : 0
         }
 
 def loadImage(imgName: str) -> pygame.Surface:

@@ -16,8 +16,6 @@ MUSIC_LOOP_EVENT = pygame.USEREVENT + 1
     #TODO: Check if the starting deck holds 52 cards.
     #TODO: Set costs back, in utils.
 
-#TODO: Show why buying a card is not possible, if the deck is too small or too big.
-
 
 class Game:
     def __init__(self):
@@ -109,13 +107,13 @@ class Game:
         self.display.blit(self.small_font.render('Correct "same" bet gives 10 Score times streak multiplier.', True, (1,1,1)), (self.width / 4 + 50, self.height - 25))
         self.display.blit(self.small_font.render('You can spend Score in the shop for upgrades.', True, (1,1,1)), (self.width / 4 + 50, self.height - 15))
         
-        # Old card underneath the new card
+        #Old card underneath the new card
         if self.old_card is not False:
             self.display.blit(
                 self.card_front,
                 dest=(self.width / 2 - 20, self.height / 4),
                 area=getHalfCardFront(self.deck.get_suit(self.old_card), self.deck.get_rank(self.old_card)))
-        # New card second, so its on top of old card
+        #New card second, so its on top of old card
         self.display.blit(
             self.card_front,
             dest=(self.width / 2 - 20, self.height / 4 + 15),
@@ -195,8 +193,8 @@ class Game:
         mouse_x = mouse_pos[0] * self.width / self.screen.get_width()
         mouse_y = mouse_pos[1] * self.height / self.screen.get_height()
         
-        # Next Button
-        # Needs to be first to properly check you are out of cards.
+        #Next Button
+        #Needs to be first to properly check you are out of cards.
         if len(self.deck.cards) - len(self.deck.played_cards) == 0:
             if self.next_button.collidepoint(mouse_x, mouse_y):
                 self.old_card = False
@@ -207,19 +205,19 @@ class Game:
                 self.cards_to_add = random.sample(range(52), 4)
                 self.play_state = "menu"
         
-        # Higher button
+        #Higher button
         if self.higher_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
             self.gameBetClick("higher")
 
-        # Lower button
+        #Lower button
         if self.lower_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
             self.gameBetClick("lower")
         
-        # Same button
+        #Same button
         if self.same_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
             self.gameBetClick("same")
         
-        # View Deck button
+        #View Deck button
         if self.view_deck_button.collidepoint(mouse_x, mouse_y):
             self.deck_background = self.display.copy()
             self.previous_state = self.play_state
@@ -267,7 +265,14 @@ class Game:
         
         #Remove card button
         self.remove_button = pygame.Rect(65, 100, 80, 30)
-        pygame.draw.rect(self.display, (255, 0, 0), self.remove_button)
+        if getCosts("remove") > self.score:
+            pygame.draw.rect(self.display, (100, 100, 100), self.remove_button)
+            self.display.blit(self.small_font.render('Not enough Score', True, (1, 1, 1)), (65, 130))
+        elif len(self.deck.cards) <= 4:
+            pygame.draw.rect(self.display, (100, 100, 100), self.remove_button)
+            self.display.blit(self.small_font.render('Deck cannot be smaller than 4 cards', True, (1, 1, 1)), (25, 130))
+        else:
+            pygame.draw.rect(self.display, (255, 0, 0), self.remove_button)
         self.display.blit(self.font.render('Remove', True, (1, 1, 1)), (77, 105))
         #Remove card cost display
         self.display.blit(self.font.render(f'Costs {getCosts("remove")} Score', True, (1, 1, 1)), (150, 105))
@@ -289,7 +294,14 @@ class Game:
         
         #Add card button
         self.add_button = pygame.Rect(65, 240, 80, 30)
-        pygame.draw.rect(self.display, (0, 255, 0), self.add_button)
+        if getCosts("add") > self.score:
+            pygame.draw.rect(self.display, (100, 100, 100), self.add_button)
+            self.display.blit(self.small_font.render('Not enough Score', True, (1, 1, 1)), (65, 270))
+        elif len(self.deck.cards) >= 64:
+            pygame.draw.rect(self.display, (100, 100, 100), self.add_button)
+            self.display.blit(self.small_font.render('Deck cannot be larger than 64 cards', True, (1, 1, 1)), (25, 270))
+        else:
+            pygame.draw.rect(self.display, (0, 255, 0), self.add_button)
         self.display.blit(self.font.render('Add', True, (1, 1, 1)), (92, 245))
         #Add card cost display
         self.display.blit(self.font.render(f'Costs {getCosts("add")} Score', True, (1, 1, 1)), (150, 245))
@@ -445,10 +457,10 @@ class Game:
                     elif self.play_state == "deck":
                         self.handleDeckClick(event.pos)
             
-            # Scale the display to the screen size
+            #Scale the display to the screen size
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
-            pygame.display.update()  # Update the display
-            self.clock.tick(30)  # Limit to 30 frames per second
+            pygame.display.update()  #Update the display
+            self.clock.tick(30)  #Limit to 30 frames per second
 
 
 Game().run()
