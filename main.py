@@ -45,7 +45,7 @@ class Game:
         self.height = self.display.get_height()
         
         try:
-            with open("highscore.json", "r") as file:
+            with open("media/highscore.json", "r") as file:
                 self.highscore = json.load(file)["highscore"]
         except FileNotFoundError:
             self.highscore = 0
@@ -95,6 +95,7 @@ class Game:
             self.streak += 1
         else:
             self.streak = 0
+        self.highscore = max(self.highscore, self.score)
     
     
     def drawGame(self):
