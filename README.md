@@ -8,11 +8,11 @@ Possible planned features:
 - Custom art by friends.
 
 # Credits
-Music by みんなの創作支援サイトＴスタ/T-STUDIO [itch.io](https://t-studio-tst.itch.io/free-music-jankis-lair)
-Card and chips sound effects by Kenny [Website](https://kenney.nl/assets/casino-audio)
-Card art by Blueeyedrat [itch.io](https://blueeyedrat.itch.io/pixel-assets-playing-cards)
-Background art by DaFluffyPotato [Website](https://dafluffypotato.com/)
-Made with pygame-ce [Website](https://pyga.me/docs/)
+Music by みんなの創作支援サイトＴスタ/T-STUDIO [itch.io](https://t-studio-tst.itch.io/free-music-jankis-lair)<br>
+Card and chips sound effects by Kenny [Website](https://kenney.nl/assets/casino-audio)<br>
+Card art by Blueeyedrat [itch.io](https://blueeyedrat.itch.io/pixel-assets-playing-cards)<br>
+Background art by DaFluffyPotato [Website](https://dafluffypotato.com/)<br>
+Made with pygame-ce [Website](https://pyga.me/docs/)<br>
 
 # Special thanks
 With special thanks to DaFluffyPotato for making a comprehensive pygame [tutorial](https://www.youtube.com/watch?v=2gABYM5M0ww). You can visit his [website](https://dafluffypotato.com/) for more games and assets.
