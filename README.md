@@ -7,12 +7,14 @@ Possible planned features:
 - Power-ups that may or may not change gameplay.
 - Custom art by friends.
 
+The only requirement are Python 3.x and pygame-ce==2.5.8
+
 # Credits
-Music by みんなの創作支援サイトＴスタ/T-STUDIO: [itch.io](https://t-studio-tst.itch.io/free-music-jankis-lair)<br>
+Music by みんなの創作支援サイトＴスタ / T-STUDIO: [Website](https://tnosite.com/en/contents-3/)<br>
 Card and chips sound effects by Kenney: [Website](https://kenney.nl/assets/casino-audio)<br>
 Card art by Blueeyedrat: [itch.io](https://blueeyedrat.itch.io/pixel-assets-playing-cards)<br>
 Background art by DaFluffyPotato: [Website](https://dafluffypotato.com/)<br>
-Made with pygame-ce: [Website](https://pyga.me/docs/)<br>
+Made with Pygame-ce: [Website](https://pyga.me/docs/)<br>
 
 # Special thanks
 With special thanks to DaFluffyPotato for making a comprehensive pygame [tutorial](https://www.youtube.com/watch?v=2gABYM5M0ww). You can visit his [website](https://dafluffypotato.com/) for more games and assets.

@@ -7,8 +7,8 @@ import pygame
 from deck import Deck
 from utils import costs, getCardFront, getCosts, getHalfCardFront, loadImage
 
-MUSIC_INTRO = "media/Jankis_Lair_intro.ogg"
-MUSIC_LOOP = "media/Jankis_Lair_loop.ogg"
+MUSIC_INTRO = "media/hypnotic_poison_full.ogg"
+MUSIC_LOOP = "media/hypnotic_poison_loop.ogg"
 MUSIC_LOOP_EVENT = pygame.USEREVENT + 1
 
 #TODO before public release:
@@ -63,12 +63,12 @@ class Game:
         self.audio_shuffle = pygame.mixer.Sound('media/short-card-fan-1.ogg')
         self.audio_shuffle.set_volume(0.4)
         self.audio_chip = pygame.mixer.Sound('media/short-chips-handle-1.ogg')
-        self.audio_chip.set_volume(0.3)
+        self.audio_chip.set_volume(0.4)
 
         pygame.mixer.music.set_endevent(MUSIC_LOOP_EVENT)
         pygame.mixer.music.set_volume(0.3)
         pygame.mixer.music.load(MUSIC_INTRO)
-        # pygame.mixer.music.play()
+        pygame.mixer.music.play()
     
     
     def compare(self, bet: str):
@@ -95,7 +95,6 @@ class Game:
             self.streak += 1
         else:
             self.streak = 0
-        self.highscore = max(self.highscore, self.score)
     
     
     def drawGame(self):
@@ -196,7 +195,7 @@ class Game:
         
         #Next Button
         #Needs to be first to properly check you are out of cards.
-        if len(self.deck.cards) - len(self.deck.played_cards) == 0:
+        if len(self.deck.cards) - len(self.deck.played_cards) == 0: #noqa
             if self.next_button.collidepoint(mouse_x, mouse_y):
                 self.old_card = False
                 self.streak = 0
@@ -340,7 +339,7 @@ class Game:
                 return
         
         #Add button
-        if self.add_button.collidepoint(mouse_x, mouse_y):
+        if self.add_button.collidepoint(mouse_x, mouse_y): #noqa
             if (self.selected_add_card is not None and
                 self.score >= getCosts("add") and
                 len(self.deck.cards) <= 64):  # Ensure deck size doesn't exceed 64
@@ -354,7 +353,7 @@ class Game:
                     self.audio_chip.play()
         
         #Remove button
-        if self.remove_button.collidepoint(mouse_x, mouse_y):
+        if self.remove_button.collidepoint(mouse_x, mouse_y): #noqa
             if (self.selected_remove_card is not None and
                 self.score >= getCosts("remove") and
                 len(self.deck.cards) > 4):  # Ensure deck size doesn't go below 4
