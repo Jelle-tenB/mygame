@@ -17,4 +17,4 @@ Background art by DaFluffyPotato: [Website](https://dafluffypotato.com/)<br>
 Made with Pygame-ce: [Website](https://pyga.me/docs/)<br>
 
 # Special thanks
-With special thanks to DaFluffyPotato for making a comprehensive pygame [tutorial](https://www.youtube.com/watch?v=2gABYM5M0ww). You can visit his [website](https://dafluffypotato.com/) for more games and assets.
+With special thanks to DaFluffyPotato for making a comprehensive Pygame [tutorial](https://www.youtube.com/watch?v=2gABYM5M0ww). You can visit his [website](https://dafluffypotato.com/) for more games and assets.

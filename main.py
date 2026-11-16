@@ -5,7 +5,14 @@ import sys
 import pygame
 
 from deck import Deck
-from utils import costs, getCardFront, getCosts, getHalfCardFront, loadImage
+from utils import (
+    costs,
+    getCardFront,
+    getCosts,
+    getHalfCardFront,
+    loadImage,
+    reroll_costs,
+)
 
 MUSIC_INTRO = "media/hypnotic_poison_full.ogg"
 MUSIC_LOOP = "media/hypnotic_poison_loop.ogg"
@@ -68,7 +75,7 @@ class Game:
         pygame.mixer.music.set_endevent(MUSIC_LOOP_EVENT)
         pygame.mixer.music.set_volume(0.3)
         pygame.mixer.music.load(MUSIC_INTRO)
-        pygame.mixer.music.play()
+        # pygame.mixer.music.play()
     
     
     def compare(self, bet: str):
@@ -241,6 +248,8 @@ class Game:
         #Needs to be reset each time, otherwise it will keep growing forever.
         self.remove_card_rects = []
         self.add_card_rects = []
+        self.times_cards_rerolled = 1
+        self.times_upgrades_rerolled = 1
         
         #Score display
         self.display.blit(self.font.render(f'Score: {self.score}', True, (1, 1, 1)), (self.width / 2 - 30, 20))
@@ -264,7 +273,7 @@ class Game:
         self.display.blit(self.font.render('Select a card to remove from the deck', True, (1, 1, 1)), (5, 5))
         
         #Remove card button
-        self.remove_button = pygame.Rect(65, 100, 80, 30)
+        self.remove_button = pygame.Rect(65, 100, 84, 30)
         if getCosts("remove") > self.score:
             pygame.draw.rect(self.display, (100, 100, 100), self.remove_button)
             self.display.blit(self.small_font.render('Not enough Score', True, (1, 1, 1)), (65, 130))
@@ -273,9 +282,7 @@ class Game:
             self.display.blit(self.small_font.render('Deck cannot be smaller than 4 cards', True, (1, 1, 1)), (25, 130))
         else:
             pygame.draw.rect(self.display, (255, 0, 0), self.remove_button)
-        self.display.blit(self.font.render('Remove', True, (1, 1, 1)), (77, 105))
-        #Remove card cost display
-        self.display.blit(self.font.render(f'Costs {getCosts("remove")} Score', True, (1, 1, 1)), (150, 105))
+        self.display.blit(self.font.render(f'Remove: {getCosts("remove")}', True, (1, 1, 1)), (67, 105))
         
         #Cards to add display
         for i, card in enumerate(self.cards_to_add):
@@ -293,7 +300,7 @@ class Game:
         self.display.blit(self.font.render('Select a card to add to the deck', True, (1, 1, 1)), (5, 145))
         
         #Add card button
-        self.add_button = pygame.Rect(65, 240, 80, 30)
+        self.add_button = pygame.Rect(65, 240, 84, 30)
         if getCosts("add") > self.score:
             pygame.draw.rect(self.display, (100, 100, 100), self.add_button)
             self.display.blit(self.small_font.render('Not enough Score', True, (1, 1, 1)), (65, 270))
@@ -302,9 +309,21 @@ class Game:
             self.display.blit(self.small_font.render('Deck cannot be larger than 64 cards', True, (1, 1, 1)), (25, 270))
         else:
             pygame.draw.rect(self.display, (0, 255, 0), self.add_button)
-        self.display.blit(self.font.render('Add', True, (1, 1, 1)), (92, 245))
-        #Add card cost display
-        self.display.blit(self.font.render(f'Costs {getCosts("add")} Score', True, (1, 1, 1)), (150, 245))
+        self.display.blit(self.font.render(f'Add: {getCosts("add")}', True, (1, 1, 1)), (82, 245))
+        
+        #Reroll Cards button
+        self.reroll_cards_button = pygame.Rect(80, 290, 50, 50)
+        if reroll_costs["cards"] * self.times_cards_rerolled > self.score:
+            pygame.draw.rect(self.display, (100, 100, 100), self.reroll_cards_button)
+        else:
+            pygame.draw.rect(self.display, (100, 100, 255), self.reroll_cards_button)
+        self.display.blit(self.font.render('Reroll:', True, (1, 1, 1)), (84, 294))
+        self.display.blit(self.font.render(f'{reroll_costs["cards"] * self.times_cards_rerolled}', True, (1, 1, 1)), (94, 310))
+        
+        #View Deck button
+        self.view_deck_button = pygame.Rect(self.width / 2 - 40, self.height - 120, 80, 30)
+        pygame.draw.rect(self.display, (255, 255, 100), self.view_deck_button)
+        self.display.blit(self.font.render('View Deck', True, (1, 1, 1)), (self.width / 2 - 34, self.height - 115))
         
         #Rules display
         self.display.blit(
@@ -315,11 +334,6 @@ class Game:
         self.next_button = pygame.Rect(self.width / 2 - 25, self.height - 75, 50, 50)
         pygame.draw.rect(self.display, (100, 100, 255), self.next_button)
         self.display.blit(self.font.render('Next', True, (1, 1, 1)), (self.width / 2 - 17, self.height - 60))
-        
-        #View Deck button
-        self.view_deck_button = pygame.Rect(self.width - 90, 10, 80, 30)
-        pygame.draw.rect(self.display, (255, 0, 0), self.view_deck_button)
-        self.display.blit(self.font.render('View Deck', True, (1, 1, 1)), (self.width - 85, 15))
 
 
     def handleMenuClick(self, mouse_pos: list):
@@ -386,6 +400,19 @@ class Game:
             self.deck_background = self.display.copy()
             self.previous_state = self.play_state
             self.play_state = "deck"
+        
+        #Reroll Cards button
+        if self.reroll_cards_button.collidepoint(mouse_x, mouse_y): # noqa
+            if self.score >= reroll_costs["cards"] * self.times_cards_rerolled:
+                self.cards_to_remove = random.sample(self.deck.cards, 4)
+                self.cards_to_add = random.sample(range(52), 4)
+                self.selected_add_card = None
+                self.selected_remove_card = None
+                self.removed_cards = []
+                self.added_cards = []
+                self.score -= reroll_costs["cards"] * self.times_cards_rerolled
+                self.times_cards_rerolled += 1
+                self.audio_shuffle.play()
 
 
     def drawDeck(self):

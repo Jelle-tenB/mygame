@@ -2,11 +2,16 @@ import pygame
 
 #add 10, remove 10
 costs = {
-            'add' : 10,
-            'remove' : 10,
-            'times added' : 0,
-            'times removed' : 0
+        'add' : 10,
+        'remove' : 10,
+        'times added' : 0,
+        'times removed' : 0
         }
+
+reroll_costs = {
+                'cards' : 0,
+                'upgrades' : 50,
+                }
 
 def loadImage(imgName: str) -> pygame.Surface:
     img = pygame.image.load(imgName).convert()
