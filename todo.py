@@ -1,4 +1,5 @@
 #TODO: Reroll shop options
+    #Cards reroll works
 
 #TODO: Save the game
 
