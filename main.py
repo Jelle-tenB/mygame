@@ -6,7 +6,7 @@ import pygame
 
 from deck import Deck
 from utils import (
-    costs,
+    card_costs,
     getCardFront,
     getCosts,
     getHalfCardFront,
@@ -50,6 +50,8 @@ class Game:
         
         self.width = self.display.get_width()
         self.height = self.display.get_height()
+        self.screen_width = self.screen.get_width()
+        self.screen_height = self.screen.get_height()
         
         try:
             with open("media/highscore.json", "r") as file:
@@ -197,8 +199,8 @@ class Game:
 
 
     def handleGameClick(self, mouse_pos: list):
-        mouse_x = mouse_pos[0] * self.width / self.screen.get_width()
-        mouse_y = mouse_pos[1] * self.height / self.screen.get_height()
+        mouse_x = mouse_pos[0] * self.width / self.screen_width
+        mouse_y = mouse_pos[1] * self.height / self.screen_height
         
         #Next Button
         #Needs to be first to properly check you are out of cards.
@@ -337,8 +339,8 @@ class Game:
 
 
     def handleMenuClick(self, mouse_pos: list):
-        mouse_x = mouse_pos[0] * self.width / self.screen.get_width()
-        mouse_y = mouse_pos[1] * self.height / self.screen.get_height()
+        mouse_x = mouse_pos[0] * self.width / self.screen_width
+        mouse_y = mouse_pos[1] * self.height / self.screen_height
 
         #Selecting card to add
         for index, card_rect in enumerate(self.add_card_rects):
@@ -363,7 +365,7 @@ class Game:
                     self.deck.cards.append(card_to_add)
                     self.selected_add_card = None
                     self.score -= getCosts("add")
-                    costs["times added"] += 1
+                    card_costs["times added"] += 1
                     self.audio_chip.play()
         
         #Remove button
@@ -377,7 +379,7 @@ class Game:
                     self.removed_cards.append(card_to_remove)
                     self.selected_remove_card = None
                     self.score -= getCosts("remove")
-                    costs["times removed"] += 1
+                    card_costs["times removed"] += 1
                     self.audio_chip.play()
         
         #Next button
@@ -437,6 +439,7 @@ class Game:
                     self.card_front,
                     dest=(self.width - 40, (i * 15) - 32 * 15),
                     area=getHalfCardFront(self.deck.get_suit(value), self.deck.get_rank(value)))
+
         if len(sorted_deck) > 32:
             self.display.blit(
                 self.card_front,
@@ -450,7 +453,7 @@ class Game:
 
 
     def handleDeckClick(self, mouse_pos: list):
-        if mouse_pos[0] * self.width / self.screen.get_width() < self.width - 80:
+        if mouse_pos[0] * self.width / self.screen_width < self.width - 80:
             if self.previous_state == "play":
                 self.play_state = "play"
             elif self.previous_state == "menu":

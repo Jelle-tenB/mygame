@@ -23,3 +23,5 @@
         #Choose when the next card gives more points
         #Change the suit of the next card
         #Double streak multiplier until the streak is broken
+        
+#TODO: Add timer for more points??
