@@ -54,7 +54,7 @@ class Game:
         self.screen_height = self.screen.get_height()
         
         try:
-            with open("media/highscore.json", "r") as file:
+            with open("media/highscore.json", "r", encoding="utf-8") as file:
                 self.highscore = json.load(file)["highscore"]
         except FileNotFoundError:
             self.highscore = 0
@@ -240,8 +240,8 @@ class Game:
         self.audio_card_place.play()
         self.compare(bet)
         if len(self.deck.cards) - len(self.deck.played_cards) == 0 and self.highscore < self.score:
-                with open("highscore.json", "w") as file:
-                    file.write(json.dumps({"highscore": self.score}))
+            with open("highscore.json", "w", encoding="utf-8") as file:
+                file.write(json.dumps({"highscore": self.score}))
         
 
     def drawMenu(self):
@@ -357,8 +357,8 @@ class Game:
         #Add button
         if self.add_button.collidepoint(mouse_x, mouse_y): #noqa
             if (self.selected_add_card is not None and
-                self.score >= getCosts("add") and
-                len(self.deck.cards) <= 64):  # Ensure deck size doesn't exceed 64
+            self.score >= getCosts("add") and
+            len(self.deck.cards) <= 64):  # Ensure deck size doesn't exceed 64
                 card_to_add = self.cards_to_add[self.selected_add_card]
                 if card_to_add not in self.added_cards:
                     self.added_cards.append(card_to_add)
@@ -371,8 +371,8 @@ class Game:
         #Remove button
         if self.remove_button.collidepoint(mouse_x, mouse_y): #noqa
             if (self.selected_remove_card is not None and
-                self.score >= getCosts("remove") and
-                len(self.deck.cards) > 4):  # Ensure deck size doesn't go below 4
+            self.score >= getCosts("remove") and
+            len(self.deck.cards) > 4):  # Ensure deck size doesn't go below 4
                 card_to_remove = self.cards_to_remove[self.selected_remove_card]
                 if card_to_remove in self.deck.cards and card_to_remove not in self.removed_cards:
                     self.deck.cards.remove(card_to_remove)

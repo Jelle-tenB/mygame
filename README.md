@@ -7,7 +7,7 @@ Possible planned features:
 - Power-ups that may or may not change gameplay.
 - Custom art by friends.
 
-The only requirement are Python 3.x and pygame-ce==2.5.8
+The only requirement are Python 3.x and Pygame-ce==2.5.8
 
 # Credits
 Music by みんなの創作支援サイトＴスタ / T-STUDIO: [Website](https://tnosite.com/en/contents-3/)<br>
