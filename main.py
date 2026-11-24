@@ -32,8 +32,7 @@ class Game:
         self.display = pygame.Surface((640, 480))
         self.clock = pygame.time.Clock()
         self.running = True
-        self.play_state = "play"
-        self.previous_state = "play"
+        self.play_state = "mainmenu"
         self.old_card = False
         self.selected_add_card = None
         self.selected_remove_card = None
@@ -59,6 +58,12 @@ class Game:
         except FileNotFoundError:
             self.highscore = 0
         
+        try:
+            with open("media/savegame.json", "r", encoding="utf-8") as file:
+                self.saved = json.load(file)["saved"]
+        except FileNotFoundError:
+            self.saved = False
+
         self.deck = Deck()
         self.deck.shuffle()
         self.new_card = self.deck.draw()
@@ -105,6 +110,46 @@ class Game:
         else:
             self.streak = 0
     
+    
+    def drawMainMenu(self):
+        self.display.blit(self.background, (0, 0))
+        self.display.blit(self.font.render('Main Menu', True, (1, 1, 1)), (self.width / 2 - 38, self.height / 4 - 10))
+        
+        #New Game button
+        self.newgame_button = pygame.Rect(self.width / 2 - 40, self.height / 4 + 10, 80, 30)
+        pygame.draw.rect(self.display, (100, 255, 100), self.newgame_button)
+        self.display.blit(self.font.render('New Game', True, (1, 1, 1)), (self.width / 2 - 38, self.height / 4 + 15))
+        
+        #Continue button
+        self.continue_button = pygame.Rect(self.width / 2 - 40, self.height / 4 + 50, 80, 30)
+        if self.saved:
+            pygame.draw.rect(self.display, (100, 255, 100), self.continue_button)
+        else:
+            pygame.draw.rect(self.display, (100, 100, 100), self.continue_button)
+        self.display.blit(self.font.render('Continue', True, (1, 1, 1)), (self.width / 2 - 38, self.height / 4 + 55))
+    
+    def handleMainMenuClick(self, mouse_pos: list):
+        mouse_x = mouse_pos[0] * self.width / self.screen_width
+        mouse_y = mouse_pos[1] * self.height / self.screen_height
+        
+        #New Game button
+        if self.newgame_button.collidepoint(mouse_x, mouse_y):
+            self.previous_state = "play"
+            self.play_state = "play"
+        
+        #Continue button
+        if self.continue_button.collidepoint(mouse_x, mouse_y) and self.saved:
+            with open("media/savegame.json", "r", encoding="utf-8") as file:
+                save_data = json.load(file)
+                self.score = save_data["score"]
+                self.deck.cards = save_data["deck"]
+                card_costs["times added"] = save_data["times added"]
+                card_costs["times removed"] = save_data["times removed"]
+                self.cards_to_remove = save_data["cards to remove"]
+                self.cards_to_add = save_data["cards to add"]
+            self.previous_state = "shop"
+            self.play_state = "shop"
+        
     
     def drawGame(self):
         self.display.blit(self.background, (0, 0))
@@ -212,7 +257,20 @@ class Game:
                 self.highscore = max(self.highscore, self.score)
                 self.cards_to_remove = random.sample(self.deck.cards, 4)
                 self.cards_to_add = random.sample(range(52), 4)
-                self.play_state = "menu"
+                self.times_cards_rerolled = 1
+                self.times_upgrades_rerolled = 1
+                #Save the game
+                with open("media/savegame.json", "w", encoding="utf-8") as file:
+                    json.dump({
+                        "saved": True,
+                        "score": self.score,
+                        "deck": self.deck.cards,
+                        "times added": card_costs["times added"],
+                        "times removed": card_costs["times removed"],
+                        "cards to remove": self.cards_to_remove,
+                        "cards to add": self.cards_to_add
+                            }, file)
+                self.play_state = "shop"
         
         #Higher button
         if self.higher_button.collidepoint(mouse_x, mouse_y) and len(self.deck.cards) - len(self.deck.played_cards) > 0:
@@ -240,18 +298,16 @@ class Game:
         self.audio_card_place.play()
         self.compare(bet)
         if len(self.deck.cards) - len(self.deck.played_cards) == 0 and self.highscore < self.score:
-            with open("highscore.json", "w", encoding="utf-8") as file:
+            with open("media/highscore.json", "w", encoding="utf-8") as file:
                 file.write(json.dumps({"highscore": self.score}))
         
 
-    def drawMenu(self):
+    def drawShop(self):
         self.display.blit(self.background, (0, 0))
-        
+
         #Needs to be reset each time, otherwise it will keep growing forever.
         self.remove_card_rects = []
         self.add_card_rects = []
-        self.times_cards_rerolled = 1
-        self.times_upgrades_rerolled = 1
         
         #Score display
         self.display.blit(self.font.render(f'Score: {self.score}', True, (1, 1, 1)), (self.width / 2 - 30, 20))
@@ -338,7 +394,7 @@ class Game:
         self.display.blit(self.font.render('Next', True, (1, 1, 1)), (self.width / 2 - 17, self.height - 60))
 
 
-    def handleMenuClick(self, mouse_pos: list):
+    def handleShopClick(self, mouse_pos: list):
         mouse_x = mouse_pos[0] * self.width / self.screen_width
         mouse_y = mouse_pos[1] * self.height / self.screen_height
 
@@ -456,16 +512,18 @@ class Game:
         if mouse_pos[0] * self.width / self.screen_width < self.width - 80:
             if self.previous_state == "play":
                 self.play_state = "play"
-            elif self.previous_state == "menu":
-                self.play_state = "menu"
+            elif self.previous_state == "shop":
+                self.play_state = "shop"
 
 
     def run(self):
         while self.running:
-            if self.play_state == "play":
+            if self.play_state == "mainmenu":
+                self.drawMainMenu()
+            elif self.play_state == "play":
                 self.drawGame()
-            elif self.play_state == "menu":
-                self.drawMenu()
+            elif self.play_state == "shop":
+                self.drawShop()
             elif self.play_state == "deck":
                 self.drawDeck()
 
@@ -480,10 +538,12 @@ class Game:
                     pygame.mixer.music.play(-1)
                 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.play_state == "play":
+                    if self.play_state == "mainmenu":
+                        self.handleMainMenuClick(event.pos)
+                    elif self.play_state == "play":
                         self.handleGameClick(event.pos)
-                    elif self.play_state == "menu":
-                        self.handleMenuClick(event.pos)
+                    elif self.play_state == "shop":
+                        self.handleShopClick(event.pos)
                     elif self.play_state == "deck":
                         self.handleDeckClick(event.pos)
             
