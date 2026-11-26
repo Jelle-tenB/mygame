@@ -22,10 +22,8 @@ class Deck:
         self.position += 1
         return card
 
-    @staticmethod
-    def get_suit(card: int) -> int:
-        return card // 13
+def get_suit(card: int) -> int:
+    return card // 13
 
-    @staticmethod
-    def get_rank(card: int) -> int:
-        return card % 13
+def get_rank(card: int) -> int:
+    return card % 13

@@ -1,3 +1,5 @@
+#TODO: Move all json loading to utils.py
+
 #TODO: Reroll shop options
     #Cards reroll works
 

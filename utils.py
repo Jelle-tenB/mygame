@@ -1,5 +1,7 @@
 import pygame
 
+from deck import get_rank
+
 #add 10, remove 10
 card_costs = {
         'add' : 10,
@@ -48,3 +50,30 @@ def getCosts(action: str) -> int:
         return card_costs["remove"] + card_costs["times removed"] * 5
     else:
         raise ValueError("Invalid action. Must be 'add' or 'remove'.")
+
+
+def compare(self, bet: str):
+    if ((bet == "higher" and get_rank(self.new_card) > get_rank(self.old_card)) or
+    (bet == "lower" and get_rank(self.new_card) < get_rank(self.old_card))):
+        if self.streak >= 10:
+            self.score += 5
+        elif self.streak >= 5:
+            self.score += 3
+        elif self.streak >= 2:
+            self.score += 2
+        else:
+            self.score += 1
+        self.streak += 1
+    elif bet == "same" and get_rank(self.new_card) == get_rank(self.old_card):
+        if self.streak >= 10:
+            self.score += 50
+        elif self.streak >= 5:
+            self.score += 30
+        elif self.streak >= 2:
+            self.score += 20
+        else:
+            self.score += 10
+        self.streak += 1
+    else:
+        self.streak = 0
+    return self.score, self.streak
